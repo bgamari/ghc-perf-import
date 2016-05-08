@@ -79,5 +79,6 @@ main = do
     (testEnv, files) <- execParser $ info (helper <*> args) mempty
     forM_ files $ \fname -> do
         let commit = takeBaseName fname
-        results <- parseResults fname
-        ingest connInfo commit testEnv (M.fromList results)
+        results <- M.fromList <$> parseResults fname
+        putStrLn $ commit++": "++show (M.size results)++" results"
+        ingest connInfo commit testEnv results
