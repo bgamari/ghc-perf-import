@@ -31,6 +31,7 @@ executable perf-import-git
   other-modules:       Types
   build-depends:       base >= 4.8 && <4.10,
                        containers >= 0.5,
+                       split >= 0.2,
                        postgresql-simple >= 0.5,
                        time >= 1.6,
                        process >= 1.4

@@ -1,5 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 
+import Data.List.Split
 import Data.Foldable
 import Database.PostgreSQL.Simple
 import Database.PostgreSQL.Simple.SqlQQ
@@ -29,7 +30,7 @@ importGit ci repo = do
     conn <- connect ci
     commits <- query_ conn [sql| SELECT commit_id, commit_sha FROM commits WHERE commit_date IS NULL |]
             :: IO [(Int, Commit)]
-    commitInfo <- getCommits repo (map snd commits)
+    commitInfo <- foldMap (getCommits repo) (chunksOf 100 $ map snd commits)
     forM_ commits $ \(commitId, commitSha) -> do
         case M.lookup commitSha commitInfo of
           Just commitDate -> do
