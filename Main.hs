@@ -8,6 +8,7 @@ import Data.DList (DList, singleton)
 import Data.Foldable
 import Options.Applicative
 import System.FilePath
+import Control.Exception
 
 import Types
 import Slurp
@@ -74,7 +75,9 @@ args =
 main :: IO ()
 main = do
     (testEnv, files) <- execParser $ info (helper <*> args) mempty
-    forM_ files $ \fname -> do
+    let printExc :: String -> SomeException -> IO ()
+        printExc fname exc = putStrLn $ fname++": "++show exc
+    forM_ files $ \fname -> handle (printExc fname) $ do
         let commit = takeBaseName fname
         results <- M.fromList <$> parseResults fname
         putStrLn $ commit++": "++show (M.size results)++" results"
