@@ -1,0 +1,22 @@
+# Tools for working with ghc-speed history
+
+```
+$ git clone git@github.com:bgamari/ghc-perf-import
+$ cd ghc-perf-import
+$ git clone git@github.com:nomeata/ghc-speed-logs
+$ git clone git@github.com:ghc/ghc
+$ cabal install
+$ psql postgres < schema.sql
+$ perf-import -e nomeata ghc-perf-import/*.log
+$ perf-import-git
+$ echo 'SELECT count(1) FROM commits;' | psql ghc_perf postgres
+$ cat <<EOF | psql ghc_perf postgres
+COPY (
+    SELECT commits.commit_sha, commits.commit_date, results.result_value
+    FROM results, commits
+    WHERE results.commit_id = commits.commit_id AND
+        results.test_id = 36
+    ORDER BY (commits.commit_date)
+) TO STDOUT CSV;
+EOF
+```
