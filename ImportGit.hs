@@ -16,7 +16,7 @@ main = importGit connInfo "ghc"
 
 getCommit :: FilePath -> Commit -> IO UTCTime
 getCommit repo commit = do
-    let args = ["-C", repo, "show", "--no-patch", "--pretty='%H\t%ct'", commit]
+    let args = ["-C", repo, "show", "--no-patch", "--pretty=%H\t%ct", commit]
     out <- readProcess "git" args ""
     return $ parseLine out
   where
