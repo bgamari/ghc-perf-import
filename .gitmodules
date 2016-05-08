@@ -1,0 +1,3 @@
+[submodule "nofib"]
+	path = nofib
+	url = git://github.com/ghc/nofib
