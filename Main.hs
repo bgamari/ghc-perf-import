@@ -6,6 +6,8 @@ import qualified Data.Map as M
 import Data.Int
 import Data.DList (DList, singleton)
 import Data.Foldable
+import Options.Applicative
+import System.FilePath
 
 import Slurp
 import SummarizeResults
@@ -65,10 +67,17 @@ ingest' conn commit testEnv tests = withTransaction conn $ do
 
 connInfo = defaultConnectInfo { connectDatabase = "ghc_perf", connectUser = "ben", connectPassword = "mudpie" }
 
+
+args :: Parser (TestEnvName, [FilePath])
+args =
+    (,)
+      <$> option str (short 'e' <> long "env" <> help "test environment name")
+      <*> some (argument str $ help "log files")
+
 main :: IO ()
 main = do
-    let commit = "00053ee6f450c4503c25ed9ba33089d991e2a04b"
-        fname = commit ++ ".log"
-    results <- parseResults fname
-    ingest connInfo commit "nomeata" (M.fromList results)
-    return ()
+    (testEnv, files) <- execParser $ info (helper <*> args) mempty
+    forM_ files $ \fname -> do
+        let commit = takeBaseName fname
+        results <- parseResults fname
+        ingest connInfo commit testEnv (M.fromList results)
