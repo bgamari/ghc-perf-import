@@ -71,8 +71,8 @@ connInfo = defaultConnectInfo { connectDatabase = "ghc_perf", connectUser = "ben
 args :: Parser (TestEnvName, [FilePath])
 args =
     (,)
-      <$> option str (short 'e' <> long "env" <> help "test environment name")
-      <*> some (argument str $ help "log files")
+      <$> option str (short 'e' <> long "env" <> help "test environment name" <> metavar "ENV")
+      <*> some (argument str $ help "log files" <> metavar "FILE")
 
 main :: IO ()
 main = do
