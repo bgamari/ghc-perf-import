@@ -29,7 +29,7 @@ executable perf-import
 executable perf-import-git
   main-is:             ImportGit.hs
   other-modules:       Types
-  build-depends:       base >= 4.9 && <4.10,
+  build-depends:       base >= 4.8 && <4.10,
                        containers >= 0.5,
                        postgresql-simple >= 0.5,
                        time >= 1.6,
