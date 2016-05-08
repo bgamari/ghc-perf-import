@@ -46,4 +46,18 @@ CREATE TABLE branch_commits
 CREATE INDEX ON branch_commits (branch_id);
 
 
+CREATE VIEW results_view AS
+    SELECT   commits.commit_sha AS commit_sha
+           , commits.commit_date AS commit_date
+           , branches.branch_name AS branch_name
+           , test_envs.test_env_name AS test_env
+           , tests.test_name AS test_name
+           , results.result_value as result_value
+    FROM results
+    JOIN tests USING (test_id)
+    JOIN test_envs USING (test_env_id)
+    JOIN commits USING (commit_id)
+    JOIN branch_commits USING (commit_id)
+    JOIN branches USING (branch_id);
+
 INSERT INTO test_envs (test_env_name) VALUES ('nomeata');
