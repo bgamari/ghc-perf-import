@@ -1,4 +1,4 @@
-create database ghc_perf;
+CREATE DATABASE ghc_perf;
 \c ghc_perf
 
 CREATE TABLE test_envs
