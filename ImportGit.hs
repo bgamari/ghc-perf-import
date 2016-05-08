@@ -12,7 +12,11 @@ import Types
 connInfo = defaultConnectInfo { connectDatabase = "ghc_perf", connectUser = "ben", connectPassword = "mudpie" }
 
 main :: IO ()
-main = importGit connInfo "ghc"
+main = do
+    let repoPath = "ghc"
+    conn <- connect connInfo
+    importCommits conn repoPath
+    importBranch conn repoPath "master"
 
 getCommit :: FilePath -> Commit -> IO UTCTime
 getCommit repo commit = do
@@ -24,9 +28,8 @@ getCommit repo commit = do
                       Just date' = parseTimeM True defaultTimeLocale "%s" date
                   in date'
 
-importGit :: ConnectInfo -> FilePath -> IO ()
-importGit ci repo = do
-    conn <- connect ci
+importCommits :: Connection -> FilePath -> IO ()
+importCommits conn repo = do
     commits <- query_ conn [sql| SELECT commit_id, commit_sha FROM commits WHERE commit_date IS NULL |]
             :: IO [(Int, Commit)]
     let printExc :: Commit -> SomeException -> IO ()
@@ -38,3 +41,25 @@ importGit ci repo = do
                           WHERE commit_id = ? |]
                     (commitDate, commitId)
         return ()
+
+importBranch :: Connection -> FilePath -> String -> IO ()
+importBranch conn repo branchName = do
+    let args = ["-C", repo, "rev-list", branchName]
+    commits <- lines <$> readProcess "git" args ""
+
+    branchId <- execute conn
+        [sql| INSERT INTO branches (branch_name)
+              VALUES (?)
+              RETURNING (branch_id) |]
+        (Only branchName)
+
+    execute conn [sql| FOR commit_id IN
+                         SELECT commit_id
+                         FROM commits
+                         WHERE commit_sha IN ?
+                       LOOP
+                         INSERT INTO branch_commits
+                         VALUES (?, commit_id)
+                       END |]
+                  (In commits, branchId)
+    return ()

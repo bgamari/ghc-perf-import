@@ -33,4 +33,17 @@ CREATE TABLE results
 CREATE INDEX ON results (test_env_id, commit_id);
 CREATE INDEX ON results (test_env_id, test_id);
 
+CREATE TABLE branches
+    ( branch_id serial PRIMARY KEY
+    , branch_name text UNIQUE
+    );
+CREATE INDEX ON branches (branch_name);
+
+CREATE TABLE branch_commits
+    ( branch_id integer REFERENCES branches (branch_id)
+    , commit_id integer REFERENCES commits (commit_id)
+    );
+CREATE INDEX ON branch_commits (branch_id);
+
+
 INSERT INTO test_envs (test_env_name) VALUES ('nomeata');
