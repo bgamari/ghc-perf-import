@@ -9,12 +9,9 @@ import Data.Foldable
 import Options.Applicative
 import System.FilePath
 
+import Types
 import Slurp
 import SummarizeResults
-
-type Commit = String
-type TestEnvName = String
-type TestName = String
 
 ingest :: ConnectInfo
        -> Commit -> TestEnvName -> M.Map TestName Double -> IO ()
