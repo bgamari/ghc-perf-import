@@ -12,10 +12,15 @@ CREATE TABLE commits
     , commit_date timestamp with time zone
     );
 
+CREATE INDEX ON commits (commit_date);
+CREATE INDEX ON commits (commit_sha);
+
 CREATE TABLE tests
     ( test_id serial PRIMARY KEY
     , test_name text UNIQUE
     );
+
+CREATE INDEX ON tests (test_name);
 
 CREATE TABLE results
     ( result_id serial PRIMARY KEY
@@ -24,5 +29,8 @@ CREATE TABLE results
     , test_id integer REFERENCES tests (test_id)
     , result_value float
     );
+
+CREATE INDEX ON results (test_env_id, commit_id);
+CREATE INDEX ON results (test_env_id, test_id);
 
 INSERT INTO test_envs (test_env_name) VALUES ('nomeata');
