@@ -47,11 +47,18 @@ importBranch conn repo branchName = do
     let args = ["-C", repo, "rev-list", branchName]
     commits <- lines <$> readProcess "git" args ""
 
-    branchId <- execute conn
+    execute conn
         [sql| INSERT INTO branches (branch_name)
               VALUES (?)
-              RETURNING (branch_id) |]
+              ON CONFLICT DO NOTHING |]
         (Only branchName)
+
+    [Only branchId] <- query conn
+        [sql| SELECT branch_id
+              FROM branches
+              WHERE branch_name = ? |]
+        (Only branchName)
+        :: IO [Only Int]
 
     execute conn [sql| FOR commit_id IN
                          SELECT commit_id
