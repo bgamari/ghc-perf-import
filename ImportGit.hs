@@ -36,5 +36,5 @@ importGit ci repo = do
         execute conn [sql| UPDATE commits
                           SET commit_date = ?
                           WHERE commit_id = ? |]
-                    (commitId, commitDate)
+                    (commitDate, commitId)
         return ()
