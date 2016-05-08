@@ -61,8 +61,7 @@ importBranch conn repo branchName = do
         :: IO [Only Int]
 
     execute conn [sql| INSERT INTO branch_commits (branch_id, commit_id)
-                       VALUES
-                         SELECT (?, commit_id)
+                       SELECT ?, commit_id
                          FROM commits
                          WHERE commit_sha IN ?
                        ON CONFLICT DO NOTHING |]
