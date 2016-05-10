@@ -2,6 +2,7 @@
 
 import numpy as np
 from matplotlib import pyplot as pl
+from matplotlib import dates as mdate
 import psycopg2
 from collections import defaultdict
 import argparse
@@ -57,6 +58,7 @@ for test in tests:
 
 # Plot trajectories and collect big deltas
 big_deltas = defaultdict(lambda: [])
+pl.figure(figsize=(12,8))
 for test, values in results.items():
     print test
     v = values['value']
@@ -91,10 +93,15 @@ for (commit, date), ys in big_deltas.items():
                 bbox=dict(boxstyle='round', fc='0.2', alpha=0.2),
                 arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0.2'))
 
-# Shrink current axis by 20% to make room for legend
+# Shrink current axis by a bit to make room for legend
 ax = pl.gca()
 box = ax.get_position()
-ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+ax.set_position([box.x0, box.y0, box.width * 0.7, box.height])
+
+# Reduce tick count
+loc = mdate.AutoDateLocator(interval_multiples=True, maxticks=8)
+pl.gca().get_xaxis().set_major_locator(loc)
+pl.gca().get_xaxis().set_major_formatter(mdate.AutoDateFormatter(loc))
 
 pl.xlabel('time')
 ylabel = 'benchmarked value'
