@@ -98,9 +98,7 @@ ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
 
 pl.xlabel('time')
 ylabel = 'benchmarked value'
-if subtract_offset:
-    ylabel += ' (offset removed)'
-ylabel += '\n' + benchmarks
+if subtract_offset: ylabel += ' (offset removed)'
 pl.ylabel(ylabel)
 pl.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 if args.output is not None:
