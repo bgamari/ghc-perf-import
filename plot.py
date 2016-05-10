@@ -47,8 +47,9 @@ print tests
 
 results = {}
 for test in tests:
+    # TODO: Why the duplicates?
     cur.execute(
-        """SELECT commit_date, commit_sha, commit_title, result_value
+        """SELECT DISTINCT commit_date, commit_sha, commit_title, result_value
            FROM results_view
            WHERE test_env = 'nomeata'
              AND branch_name = 'master'
