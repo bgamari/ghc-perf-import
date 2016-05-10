@@ -48,11 +48,17 @@ print tests
 results = {}
 for test in tests:
     cur.execute(
-        """SELECT commit_date, commit_sha, result_value FROM results_view WHERE test_env = 'nomeata' AND branch_name = 'master' AND test_name='%s' ORDER BY commit_date""" % test
+        """SELECT commit_date, commit_sha, commit_title, result_value
+           FROM results_view
+           WHERE test_env = 'nomeata'
+             AND branch_name = 'master'
+             AND test_name='%s'
+           ORDER BY commit_date""" % test
     )
-    results[test] = np.array([ (rec[0], rec[1], rec[2]) for rec in cur ],
+    results[test] = np.array([ tuple(rec) for rec in cur ],
                              dtype=[('date', np.object),
                                     ('commit', 'a40'),
+                                    ('title', np.object),
                                     ('value', np.float)])
     print test, len(results[test])
 
@@ -70,7 +76,7 @@ for test, values in results.items():
         if subtract_offset:
             y -= v[0]
         big_deltas[(d['commit'], d['date'])].append(y)
-        print '%f   %s  (%s)' % (delta, d['commit'], d['date'])
+        print '%+6.1f%%    %s  (%s): %s' % (100*delta, d['commit'], d['date'], d['title'])
 
     print
 
