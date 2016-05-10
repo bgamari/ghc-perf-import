@@ -20,3 +20,38 @@ COPY (
 ) TO STDOUT CSV;
 EOF
 ```
+
+Export all results for a given test,
+```
+\copy (
+    SELECT *
+    FROM results_view
+    WHERE test_env = 'nomeata'
+      AND branch_name = 'master'
+      AND test_name='compile-allocs/AbsConc3'
+    ORDER BY commit_date
+) TO 'hi' CSV;
+```
+
+Find commits with severe negative performance hit,
+```
+WITH deltas(commit_sha, commit_date, test_name, delta) AS (
+    SELECT x.commit_sha,
+           x.commit_date,
+           x.test_name,
+           (x.result_value - x.prev_value) / nullif(x.prev_value, 0) AS delta
+    FROM (
+        SELECT commit_sha,
+               commit_date,
+               test_name,
+               result_value,
+               lag(result_value) OVER (PARTITION BY test_name
+                                       ORDER BY commit_date) AS prev_value
+        FROM results_view
+        WHERE branch_name = 'master'
+          AND test_env = 'nomeata'
+        ORDER BY commit_date
+    ) AS x
+)
+SELECT * FROM deltas WHERE delta > 0.05;
+```
