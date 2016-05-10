@@ -45,17 +45,15 @@ for test, values in results.items():
     v = values['value']
     deltas = (v[1:] - v[:-1]) / v[:-1]
 
-    print '\n'.join('%f   %s  (%s)' % (delta, d['commit'], d['date'])
-                    for (delta, d) in zip(deltas[deltas > delta_thresh],
-                                          values[1:][deltas > delta_thresh]))
-    print
-
     for (delta, d) in zip(deltas[deltas > delta_thresh],
                           values[1:][deltas > delta_thresh]):
         y = d['value']
         if subtract_offset:
             y -= v[0]
         big_deltas[(d['commit'], d['date'])].append(y)
+        print '%f   %s  (%s)' % (delta, d['commit'], d['date'])
+
+    print
 
     if plot == 'delta':
         pl.plot(values['date'][1:], deltas, label=test)
@@ -82,6 +80,10 @@ box = ax.get_position()
 ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
 
 pl.xlabel('time')
-pl.ylabel('benchmarked value\n%s' % benchmarks)
+ylabel = 'benchmarked value'
+if subtract_offset:
+    ylabel += ' (offset removed)'
+ylabel += '\n' + benchmarks
+pl.ylabel(ylabel)
 pl.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 pl.show()
