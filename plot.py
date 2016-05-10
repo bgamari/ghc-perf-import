@@ -84,13 +84,13 @@ for test, values in results.items():
 # Plot annotations for big deltas
 for (commit, date), ys in big_deltas.items():
     y = max(ys)
-    pl.axvline(date, alpha=0.1)
+    pl.axvline(date, alpha=0.2, color='k')
     pl.annotate(commit[:8],
                 xy=(date, y),
                 xycoords='data',
                 xytext=(-16, 56),
                 textcoords='offset points',
-                bbox=dict(boxstyle='round', fc='0.2', alpha=0.2),
+                bbox=dict(boxstyle='round', fc='0.2', alpha=0.4),
                 arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0.2'))
 
 # Shrink current axis by a bit to make room for legend
