@@ -51,6 +51,7 @@ CREATE INDEX ON branch_commits (branch_id);
 CREATE VIEW results_view AS
     SELECT   commits.commit_sha AS commit_sha
            , commits.commit_date AS commit_date
+           , commits.commit_title AS commit_title
            , branches.branch_name AS branch_name
            , test_envs.test_env_name AS test_env
            , tests.test_name AS test_name
