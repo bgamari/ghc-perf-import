@@ -40,7 +40,7 @@ WITH deltas(commit_sha, commit_date, commit_title, test_name, delta) AS (
            x.commit_date,
            x.commit_title,
            x.test_name,
-           (x.result_value - x.prev_value) / nullif(x.prev_value, 0) AS delta
+           (x.result_value - x.prev_value) / NULLIF(x.prev_value, 0) AS delta
     FROM (
         SELECT commit_sha,
                commit_date,
@@ -58,5 +58,6 @@ WITH deltas(commit_sha, commit_date, commit_title, test_name, delta) AS (
 SELECT *
 FROM deltas
 WHERE abs(delta) > 0.10
-  AND test_name LIKE 'compile-allocs/%';
+  AND test_name LIKE 'compile-allocs/%'
+ORDER BY commit_sha, abs(delta) DESC;
 ```
