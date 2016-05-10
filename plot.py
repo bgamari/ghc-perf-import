@@ -90,7 +90,7 @@ for (commit, date), ys in big_deltas.items():
                 xycoords='data',
                 xytext=(-16, 56),
                 textcoords='offset points',
-                bbox=dict(boxstyle='round', fc='0.2', alpha=0.4),
+                bbox=dict(boxstyle='round', fc='0.9', alpha=1.0),
                 arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0.2'))
 
 # Shrink current axis by a bit to make room for legend
