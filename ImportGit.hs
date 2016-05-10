@@ -18,15 +18,18 @@ main = do
     importCommits conn repoPath
     importBranch conn repoPath "master"
 
-getCommit :: FilePath -> Commit -> IO UTCTime
-getCommit repo commit = do
-    let args = ["-C", repo, "show", "--no-patch", "--pretty=%H\t%ct", commit]
-    out <- readProcess "git" args ""
-    return $ parseLine out
+getCommitInfo :: FilePath -> Commit -> IO (UTCTime, String)
+getCommitInfo repo commit = do
+    let args = ["-C", repo, "show", "--no-patch", "--pretty=%H\t%ct\n%s", commit]
+    parse <$> readProcess "git" args ""
   where
-    parseLine l = let [commit, date] = words l
-                      Just date' = parseTimeM True defaultTimeLocale "%s" date
-                  in date'
+    parse output
+      | [l1, title] <- lines output
+      = let [commit, date] = words l1
+            Just date' = parseTimeM True defaultTimeLocale "%s" date
+        in (date', title)
+      | otherwise
+      = error $ "getCommitInfo: Parse error: "++output
 
 importCommits :: Connection -> FilePath -> IO ()
 importCommits conn repo = do
@@ -35,11 +38,12 @@ importCommits conn repo = do
     let printExc :: Commit -> SomeException -> IO ()
         printExc commitSha exc = putStrLn $ commitSha++": "++show exc
     forM_ commits $ \(commitId, commitSha) -> handle (printExc commitSha) $ do
-        commitDate <- getCommit repo commitSha
+        (commitDate, commitTitle) <- getCommitInfo repo commitSha
         execute conn [sql| UPDATE commits
-                          SET commit_date = ?
-                          WHERE commit_id = ? |]
-                    (commitDate, commitId)
+                           SET commit_date = ?,
+                               commit_title = ?
+                           WHERE commit_id = ? |]
+                    (commitDate, commitTitle, commitId)
         return ()
 
 importBranch :: Connection -> FilePath -> String -> IO ()

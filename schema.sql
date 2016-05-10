@@ -10,6 +10,7 @@ CREATE TABLE commits
     ( commit_id serial PRIMARY KEY
     , commit_sha text UNIQUE
     , commit_date timestamp with time zone
+    , commit_title text
     );
 
 CREATE INDEX ON commits (commit_date);
