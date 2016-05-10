@@ -4,27 +4,42 @@ import numpy as np
 from matplotlib import pyplot as pl
 import psycopg2
 from collections import defaultdict
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--threshold', '-t', type=float, default=0.05,
+                    help='relative change threshold')
+parser.add_argument('--subtract-offset', '-O', action='store_true',
+                    help='subtract baseline offset from individual benchmarks')
+parser.add_argument('--limit', '-l', type=int,
+                    help='maximum number of benchmarks to plot')
+parser.add_argument('benchmark', type=str, nargs='+',
+                    help='which benchmarks to plot')
+args = parser.parse_args()
 
 # relative change significance threshold
-delta_thresh = 0.05
+delta_thresh = args.threshold
 
 # Plot relative changes
 #plot='delta'
 
 # Plot absolute values
 plot='abs'
-subtract_offset = True
+subtract_offset = args.subtract_offset
 
 # Which benchmarks?
 #benchmarks = 'compile_time'
-benchmarks = 'compile_allocs'
+benchmarks = '|'.join(args.benchmark)
 
 conn = psycopg2.connect('dbname=ghc_perf host=ben-server.local port=5432 user=ben password=mudpie')
 cur = conn.cursor()
 
-cur.execute("""SELECT test_name FROM tests WHERE test_name LIKE '%s/%%' LIMIT 5""" % benchmarks)
+cmd = "SELECT test_name FROM tests"
+cmd += " WHERE test_name SIMILAR TO '%%(%s)%%'" % benchmarks
+if args.limit is not None:
+    cmd += " LIMIT %d" % args.limit
+cur.execute(cmd)
 tests = [rec[0] for rec in cur]
-#tests = ['compile-allocs/AbsConc3', 'compile-allocs/Activity']
 print tests
 
 results = {}
