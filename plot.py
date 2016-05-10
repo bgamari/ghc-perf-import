@@ -13,6 +13,8 @@ parser.add_argument('--subtract-offset', '-O', action='store_true',
                     help='subtract baseline offset from individual benchmarks')
 parser.add_argument('--limit', '-l', type=int,
                     help='maximum number of benchmarks to plot')
+parser.add_argument('--output', '-o', type=str,
+                    help='output filename of plot')
 parser.add_argument('benchmark', type=str, nargs='+',
                     help='which benchmarks to plot')
 args = parser.parse_args()
@@ -101,4 +103,7 @@ if subtract_offset:
 ylabel += '\n' + benchmarks
 pl.ylabel(ylabel)
 pl.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-pl.show()
+if args.output is not None:
+    pl.savefig(args.output)
+else:
+    pl.show()
