@@ -65,7 +65,8 @@ for test in tests:
 
 # Plot trajectories and collect big deltas
 big_deltas = defaultdict(lambda: [])
-pl.figure(figsize=(12,8))
+pl.figure(figsize=(12,12))
+rows = []
 for test, values in results.items():
     print test
     v = values['value']
@@ -77,6 +78,10 @@ for test, values in results.items():
         if subtract_offset:
             y -= v[0]
         big_deltas[(d['commit'], d['date'])].append(y)
+        rows.append((test,
+                     '%+6.1f%%' % (100*delta),
+                     d['commit'][:8],
+                     d['title'] if len(d['title']) < 60 else d['title'][:60]+"..."))
         print '%+6.1f%%    %s  (%s): %s' % (100*delta, d['commit'], d['date'], d['title'])
 
     print
@@ -87,6 +92,17 @@ for test, values in results.items():
         if subtract_offset:
             v -= v[0]
         pl.plot(values['date'], v, label=test)
+
+rows.sort()
+tbl = pl.table(cellText=rows,
+               cellLoc='left',
+               colLabels=['test', 'delta', 'commit', 'title'],
+               colWidths=[0.3,    0.1,     0.1,      0.6],
+               loc='bottom')
+tbl.auto_set_font_size(False)
+tbl.set_fontsize(8)
+table_cells = tbl.properties()['child_artists']
+for cell in table_cells: cell.set_height(0.1)
 
 # Plot annotations for big deltas
 for (commit, date), ys in big_deltas.items():
@@ -101,9 +117,7 @@ for (commit, date), ys in big_deltas.items():
                 arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0.2'))
 
 # Shrink current axis by a bit to make room for legend
-ax = pl.gca()
-box = ax.get_position()
-ax.set_position([box.x0, box.y0, box.width * 0.7, box.height])
+pl.subplots_adjust(bottom=0.7, right=0.65)
 
 # Reduce tick count
 loc = mdate.AutoDateLocator(interval_multiples=True, maxticks=8)

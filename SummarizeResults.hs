@@ -3,18 +3,24 @@
 module SummarizeResults where
 
 import Slurp
+import Data.List (isSuffixOf)
 import qualified Data.Map as M
 import Control.Monad.Trans.Writer
 import Data.DList (DList, singleton)
 import Data.Foldable
+import qualified Codec.Compression.Lzma as Lzma
+import qualified Data.ByteString.Lazy.Char8 as BSL
 
 sample :: Real a => String -> a -> Writer (DList (String, Double)) ()
 sample k v = tell $ singleton (k, realToFrac v)
 
 parseResults :: FilePath  -> IO [(String, Double)]
 parseResults path = do
-    res <- parse_log <$> readFile path
+    res <- parse_log . BSL.unpack . decompress <$> BSL.readFile path
     return $ toList $ execWriter $ traverse buildResults res
+  where
+    decompress
+      | ".xz" `isSuffixOf` path = Lzma.decompress
 
 buildResults :: Results -> Writer (DList (String, Double)) ()
 buildResults (Results{..}) = do
