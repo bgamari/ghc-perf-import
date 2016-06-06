@@ -33,4 +33,5 @@ executable perf-import-git
   build-depends:       base >= 4.8 && <4.10,
                        postgresql-simple >= 0.5,
                        time >= 1.6,
+                       optparse-applicative >= 0.12,
                        process >= 1.4

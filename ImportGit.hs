@@ -8,12 +8,17 @@ import Data.Time.Format
 import Data.Time.Clock
 import System.Process
 import Types
+import Options.Applicative
 
 connInfo = defaultConnectInfo { connectDatabase = "ghc_perf", connectUser = "ben", connectPassword = "mudpie" }
 
+args :: Parser FilePath
+args =
+    option str (short 'd' <> long "directory" <> help "GHC repository path")
+
 main :: IO ()
 main = do
-    let repoPath = "ghc"
+    repoPath <- execParser $ info (helper <*> args) mempty
     conn <- connect connInfo
     importCommits conn repoPath
     importBranch conn repoPath "master"
