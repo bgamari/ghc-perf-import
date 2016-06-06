@@ -33,16 +33,18 @@ Export all results for a given test,
 ) TO 'hi' CSV;
 ```
 
-Find commits with severe negative performance hit,
+Find commits which strongly affect compiler allocations,
 ```
-WITH deltas(commit_sha, commit_date, test_name, delta) AS (
+WITH deltas(commit_sha, commit_date, commit_title, test_name, delta) AS (
     SELECT x.commit_sha,
            x.commit_date,
+           x.commit_title,
            x.test_name,
-           (x.result_value - x.prev_value) / nullif(x.prev_value, 0) AS delta
+           (x.result_value - x.prev_value) / NULLIF(x.prev_value, 0) AS delta
     FROM (
         SELECT commit_sha,
                commit_date,
+               commit_title,
                test_name,
                result_value,
                lag(result_value) OVER (PARTITION BY test_name
@@ -53,5 +55,9 @@ WITH deltas(commit_sha, commit_date, test_name, delta) AS (
         ORDER BY commit_date
     ) AS x
 )
-SELECT * FROM deltas WHERE delta > 0.05;
+SELECT *
+FROM deltas
+WHERE abs(delta) > 0.10
+  AND test_name LIKE 'compile-allocs/%'
+ORDER BY commit_sha, abs(delta) DESC;
 ```

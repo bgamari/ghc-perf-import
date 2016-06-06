@@ -2,6 +2,7 @@
 
 import numpy as np
 from matplotlib import pyplot as pl
+from matplotlib import dates as mdate
 import psycopg2
 from collections import defaultdict
 import argparse
@@ -46,17 +47,25 @@ print tests
 
 results = {}
 for test in tests:
+    # TODO: Why the duplicates?
     cur.execute(
-        """SELECT commit_date, commit_sha, result_value FROM results_view WHERE test_env = 'nomeata' AND branch_name = 'master' AND test_name='%s' ORDER BY commit_date""" % test
+        """SELECT DISTINCT commit_date, commit_sha, commit_title, result_value
+           FROM results_view
+           WHERE test_env = 'nomeata'
+             AND branch_name = 'master'
+             AND test_name='%s'
+           ORDER BY commit_date""" % test
     )
-    results[test] = np.array([ (rec[0], rec[1], rec[2]) for rec in cur ],
+    results[test] = np.array([ tuple(rec) for rec in cur ],
                              dtype=[('date', np.object),
                                     ('commit', 'a40'),
+                                    ('title', np.object),
                                     ('value', np.float)])
     print test, len(results[test])
 
 # Plot trajectories and collect big deltas
 big_deltas = defaultdict(lambda: [])
+pl.figure(figsize=(12,8))
 for test, values in results.items():
     print test
     v = values['value']
@@ -68,7 +77,7 @@ for test, values in results.items():
         if subtract_offset:
             y -= v[0]
         big_deltas[(d['commit'], d['date'])].append(y)
-        print '%f   %s  (%s)' % (delta, d['commit'], d['date'])
+        print '%+6.1f%%    %s  (%s): %s' % (100*delta, d['commit'], d['date'], d['title'])
 
     print
 
@@ -82,19 +91,24 @@ for test, values in results.items():
 # Plot annotations for big deltas
 for (commit, date), ys in big_deltas.items():
     y = max(ys)
-    pl.axvline(date, alpha=0.1)
+    pl.axvline(date, alpha=0.2, color='k')
     pl.annotate(commit[:8],
                 xy=(date, y),
                 xycoords='data',
                 xytext=(-16, 56),
                 textcoords='offset points',
-                bbox=dict(boxstyle='round', fc='0.2', alpha=0.2),
+                bbox=dict(boxstyle='round', fc='0.9', alpha=1.0),
                 arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0.2'))
 
-# Shrink current axis by 20% to make room for legend
+# Shrink current axis by a bit to make room for legend
 ax = pl.gca()
 box = ax.get_position()
-ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+ax.set_position([box.x0, box.y0, box.width * 0.7, box.height])
+
+# Reduce tick count
+loc = mdate.AutoDateLocator(interval_multiples=True, maxticks=8)
+pl.gca().get_xaxis().set_major_locator(loc)
+pl.gca().get_xaxis().set_major_formatter(mdate.AutoDateFormatter(loc))
 
 pl.xlabel('time')
 ylabel = 'benchmarked value'
