@@ -38,7 +38,8 @@ ingest' conn commit testEnv tests = withTransaction conn $ do
 
     execute conn
         [sql| INSERT INTO commits (commit_sha)
-              VALUES (?) |]
+              VALUES (?)
+              ON CONFLICT DO NOTHING |]
         (Only commit)
 
     [Only commitId] <- query conn
