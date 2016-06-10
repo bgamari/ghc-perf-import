@@ -79,7 +79,7 @@ main = do
     let printExc :: String -> SomeException -> IO ()
         printExc fname exc = putStrLn $ fname++": "++show exc
     forM_ files $ \fname -> handle (printExc fname) $ do
-        let commit = takeBaseName fname
+        let commit = dropExtensions $ takeFileName fname
         results <- M.fromList <$> parseResults fname
         putStrLn $ commit++": "++show (M.size results)++" results"
         ingest connInfo commit testEnv results
