@@ -21,6 +21,7 @@ parseResults path = do
   where
     decompress
       | ".xz" `isSuffixOf` path = Lzma.decompress
+      | otherwise               = id
 
 buildResults :: Results -> Writer (DList (String, Double)) ()
 buildResults (Results{..}) = do
