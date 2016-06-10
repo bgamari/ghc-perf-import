@@ -1,5 +1,12 @@
 # Tools for working with ghc-speed history
 
+`perf-import` takes validate logs, picks out the juicy performance number from
+them, and plops them into the database.
+
+`perf-import-git` traverses the database for commits lacking metadata (e.g.
+commit message and date), looks them up in the given repository, and plops the
+resulting metadata to the database.
+
 ```
 $ git clone git@github.com:bgamari/ghc-perf-import
 $ cd ghc-perf-import
