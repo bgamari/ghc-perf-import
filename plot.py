@@ -10,6 +10,8 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('--threshold', '-t', type=float, default=0.05,
                     help='relative change threshold')
+parser.add_argument('--env', '-e', type=str, default='nomeata',
+                    help='name of the test environment to take samples from')
 parser.add_argument('--subtract-offset', '-O', action='store_true',
                     help='subtract baseline offset from individual benchmarks')
 parser.add_argument('--limit', '-l', type=int,
@@ -19,6 +21,8 @@ parser.add_argument('--output', '-o', type=str,
 parser.add_argument('benchmark', type=str, nargs='+',
                     help='which benchmarks to plot')
 args = parser.parse_args()
+
+with_table = False
 
 # relative change significance threshold
 delta_thresh = args.threshold
@@ -51,10 +55,10 @@ for test in tests:
     cur.execute(
         """SELECT DISTINCT commit_date, commit_sha, commit_title, result_value
            FROM results_view
-           WHERE test_env = 'nomeata'
+           WHERE test_env = '{env}'
              AND branch_name = 'master'
-             AND test_name='%s'
-           ORDER BY commit_date""" % test
+             AND test_name='{test_name}'
+           ORDER BY commit_date""".format(env=args.env, test_name=test)
     )
     results[test] = np.array([ tuple(rec) for rec in cur ],
                              dtype=[('date', np.object),
@@ -93,16 +97,17 @@ for test, values in results.items():
             v -= v[0]
         pl.plot(values['date'], v, label=test)
 
-rows.sort()
-tbl = pl.table(cellText=rows,
-               cellLoc='left',
-               colLabels=['test', 'delta', 'commit', 'title'],
-               colWidths=[0.3,    0.1,     0.1,      0.6],
-               loc='bottom')
-tbl.auto_set_font_size(False)
-tbl.set_fontsize(8)
-table_cells = tbl.properties()['child_artists']
-for cell in table_cells: cell.set_height(0.1)
+if with_table:
+    rows.sort()
+    tbl = pl.table(cellText=rows,
+                cellLoc='left',
+                colLabels=['test', 'delta', 'commit', 'title'],
+                colWidths=[0.3,    0.1,     0.1,      0.6],
+                loc='bottom')
+    tbl.auto_set_font_size(False)
+    tbl.set_fontsize(8)
+    table_cells = tbl.properties()['child_artists']
+    for cell in table_cells: cell.set_height(0.1)
 
 # Plot annotations for big deltas
 for (commit, date), ys in big_deltas.items():
