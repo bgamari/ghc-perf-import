@@ -68,3 +68,9 @@ WHERE abs(delta) > 0.10
   AND test_name LIKE 'compile-allocs/%'
 ORDER BY commit_sha, abs(delta) DESC;
 ```
+
+
+To produce terribly-formatted plots,
+```
+$ i=0; while IFS= read -r tests; do echo $tests; ./plot.py -o $i.svg $tests; let i=i+1; done < tests.grouped
+```
