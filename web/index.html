@@ -1,0 +1,36 @@
+<!DOCTYPE html5>
+<html>
+    <head>
+        <title>hello world</title>
+        <meta charset="utf-8" />
+        <link rel="stylesheet" href="ghc_perf.css" type="text/css" />
+        <script src="jquery-3.0.0.js"></script>
+        <!-- <script src="https://cdn.plot.ly/plotly-latest.min.js" type="application/javascript" ></script> -->
+        <script src="plotly-latest.min.js" type="application/javascript" ></script>
+    </head>
+    <body>
+        <h1>GHC Performance</h1>
+        <div id="please-wait">
+            <p>Please Wait...</p>
+        </div>
+
+        <div id="results">
+            <div id="plot" style="width: 1024px; height: 800px;"></div>
+            <table id="deltas">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Commit</th>
+                        <th>Test</th>
+                        <th>Change</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <ul id="tests"></ul>
+
+        <script src="ghc_perf.js" type="application/javascript" ></script>
+    </body>
+</html>
