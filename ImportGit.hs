@@ -13,16 +13,20 @@ import Options.Applicative
 
 connInfo = defaultConnectInfo { connectDatabase = "ghc_perf", connectUser = "ben", connectPassword = "mudpie" }
 
-args :: Parser FilePath
+type BranchName = String
+
+args :: Parser (FilePath, BranchName)
 args =
-    option str (short 'd' <> long "directory" <> help "GHC repository path")
+    (,)
+      <$> option str (short 'd' <> long "directory" <> help "GHC repository path")
+      <*> option str (short 'b' <> long "branch" <> help "name of branch to import" <> value "master")
 
 main :: IO ()
 main = do
-    repoPath <- execParser $ info (helper <*> args) mempty
+    (repoPath, branch) <- execParser $ info (helper <*> args) mempty
     conn <- connect connInfo
     importCommits conn repoPath
-    importBranch conn repoPath "master"
+    importBranch conn repoPath branch
 
 getCommitInfo :: FilePath -> Commit -> IO (UTCTime, String)
 getCommitInfo repo commit = do
