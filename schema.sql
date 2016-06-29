@@ -55,6 +55,7 @@ CREATE VIEW results_view AS
            , commits.commit_date AS commit_date
            , commits.commit_title AS commit_title
            , branches.branch_name AS branch_name
+           , branch_commits.sequence_n AS sequence_n
            , test_envs.test_env_name AS test_env
            , tests.test_name AS test_name
            , results.result_value as result_value
