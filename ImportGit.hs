@@ -15,18 +15,20 @@ connInfo = defaultConnectInfo { connectDatabase = "ghc_perf", connectUser = "ben
 
 type BranchName = String
 
-args :: Parser (FilePath, BranchName)
+args :: Parser (FilePath, [BranchName])
 args =
     (,)
       <$> option str (short 'd' <> long "directory" <> help "GHC repository path")
-      <*> option str (short 'b' <> long "branch" <> help "name of branch to import" <> value "master")
+      <*> branches
+  where
+    branches = some (argument str (metavar "REF" <> help "name of branch to import")) <|> pure ["master"]
 
 main :: IO ()
 main = do
-    (repoPath, branch) <- execParser $ info (helper <*> args) mempty
+    (repoPath, branches) <- execParser $ info (helper <*> args) mempty
     conn <- connect connInfo
     importCommits conn repoPath
-    importBranch conn repoPath branch
+    mapM_ (importBranch conn repoPath) branches
 
 getCommitInfo :: FilePath -> Commit -> IO (UTCTime, String)
 getCommitInfo repo commit = do
@@ -88,7 +90,7 @@ importBranch conn repo branchName = do
                      WHERE commit_id IN ?
                      |]
                  (Only $ In $ M.elems commitIds)
-    _n <- executeMany conn
+    n <- executeMany conn
                       [sql|
                           INSERT INTO branch_commits (branch_id, commit_id, sequence_n)
                           VALUES (?,?,?)
@@ -97,4 +99,5 @@ importBranch conn repo branchName = do
                       | (n, commit) <- zip [0::Int ..] commits
                       , Just commitId <- pure $ M.lookup commit commitIds
                       ]
+    putStrLn $ "Imported "++show n++" commits on branch "++show branchName
     return ()
