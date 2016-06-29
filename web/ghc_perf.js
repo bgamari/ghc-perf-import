@@ -61,7 +61,7 @@ function update_plots() {
         margin: {
             l: 70, b: 80, r: 10, t: 20
         },
-        annotations: []
+        annotations: deltas_annots(deltas)
     };
     let trace_n = 0;
     for (let x of Object.entries(test_points)) {
@@ -86,7 +86,6 @@ function update_plots() {
         });
         trace_n = trace_n + 1;
     }
-    layout.annotations = deltas_annots(deltas);
     Plotly.purge(graph_div);
     Plotly.newPlot(graph_div, data, layout);
     graph_div.on('plotly_hover', function (ev) {
@@ -136,7 +135,7 @@ function deltas_annots(deltas) {
 function fill_deltas_table(deltas) {
     const tbl = $("#deltas tbody");
     tbl.children().remove();
-    for (let x of deltas) {
+    deltas.forEach(x => {
         tbl.append(
             $('<tr>')
                 .append($("<td/>").html(new Date(x.commit_date).toDateString()))
@@ -144,13 +143,14 @@ function fill_deltas_table(deltas) {
                 .append($("<td/>").html(x.test_name))
                 .append($("<td/>").html((100*x.delta).toPrecision(2) + '%'))
                 .append($("<td/>").html(x.commit_title))
-                .on('click', ev => { selected_commit = x.commit_sha;
-                                     add_deltas_annots(deltas);
-                                   })
+                .on('click', ev => {
+                        selected_commit = x.commit_sha;
+                        Plotly.relayout(graph_div, { 'annotations': deltas_annots(deltas) });
+                })
                 .attr('data-commit', x.commit_sha)
                 .attr('data-test_name', x.test_name)
         );
-    }
+    });
 }
 
 populate_tests();
