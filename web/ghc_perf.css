@@ -12,5 +12,9 @@ td {
 }
 
 #deltas tr:hover {
-    background-color: #ddd;
+    background-color: #ccc;
+}
+
+tr.selected {
+    background-color: #ffc;
 }
