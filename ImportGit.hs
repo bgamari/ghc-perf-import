@@ -2,6 +2,7 @@
 
 import Control.Exception
 import Data.Foldable
+import qualified Data.Map as M
 import Database.PostgreSQL.Simple
 import Database.PostgreSQL.Simple.SqlQQ
 import Data.Time.Format
@@ -69,10 +70,27 @@ importBranch conn repo branchName = do
         (Only branchName)
         :: IO [Only Int]
 
-    execute conn [sql| INSERT INTO branch_commits (branch_id, commit_id)
-                       SELECT ?, commit_id
-                         FROM commits
-                         WHERE commit_sha IN ?
-                       ON CONFLICT DO NOTHING |]
-                  (branchId, In commits)
+    commitIds <- M.fromList <$> query conn
+                                      [sql|
+                                          SELECT commit_sha, commit_id
+                                          FROM commits
+                                          WHERE commit_sha IN ?
+                                          |]
+                                      (Only $ In commits)
+              :: IO (M.Map Commit Int)
+
+    execute conn [sql|
+                     DELETE FROM branch_commits
+                     WHERE commit_id IN ?
+                     |]
+                 (Only $ In $ M.elems commitIds)
+    _n <- executeMany conn
+                      [sql|
+                          INSERT INTO branch_commits (branch_id, commit_id, sequence_n)
+                          VALUES (?,?,?)
+                          |]
+                      [ (branchId, commitId, n)
+                      | (n, commit) <- zip [0::Int ..] commits
+                      , Just commitId <- pure $ M.lookup commit commitIds
+                      ]
     return ()

@@ -43,7 +43,9 @@ CREATE INDEX ON branches (branch_name);
 CREATE TABLE branch_commits
     ( branch_id integer REFERENCES branches (branch_id)
     , commit_id integer REFERENCES commits (commit_id)
+    , sequence_n integer
     , PRIMARY KEY (branch_id, commit_id)
+    , UNIQUE (branch_id, sequence_n)
     );
 CREATE INDEX ON branch_commits (branch_id);
 
