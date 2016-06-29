@@ -41,16 +41,20 @@ function add_test(test) {
             return resp.json().then(resp => {
                 console.log(`Have ${resp.length} points for ${test}`);
                 test_points[test] = { points: resp, yaxis: null };
-
-                deltas = flatten(
-                    Object.entries(test_points)
-                        .map(([_, {points: points}]) => find_deltas(points))
-                        .sort((x, y) => x.sequence_n < y.sequence_n));
-                fill_deltas_table(deltas);
-                update_plots();
-                $("body").removeClass('working');
+                update_all();
             });
         });
+}
+
+function update_all() {
+    $("body").addClass('working');
+    deltas = flatten(
+        Object.entries(test_points)
+            .map(([_, {points: points}]) => find_deltas(points))
+            .sort((x, y) => x.sequence_n < y.sequence_n));
+    fill_deltas_table(deltas);
+    update_plots();
+    $("body").removeClass('working');
 }
 
 function update_plots() {
@@ -112,11 +116,12 @@ let deltas = [];
 
 function find_deltas(points) {
     let deltas = [];
+    const threshold = $('#delta-threshold')[0].value / 100;
     zip([points.slice(0,-1), points.slice(1)]).forEach(pair => {
         const fst = pair[0];
         const snd = pair[1];
         const delta = (snd.result_value - fst.result_value) / snd.result_value;
-        if (delta > 0.05) {
+        if (delta > threshold) {
             snd['delta'] = delta;
             deltas.push(snd);
         }
