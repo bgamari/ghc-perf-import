@@ -33,13 +33,13 @@ function add_test(test) {
     console.log(`Adding test ${test}`);
 
     $("body").addClass('working');
-    fetch(`http://home.smart-cactus.org:8080/results_view?test_name=eq.${test}&branch_name=eq.master&test_env=eq.nomeata&order=commit_date&limit=${limit}`)
+    fetch(`http://home.smart-cactus.org:8080/results_view?test_name=eq.${test}&branch_name=eq.master&test_env=eq.nomeata&order=sequence_n&limit=${limit}`)
         .then(resp => {
             return resp.json().then(resp => {
                 console.log(`Have ${resp.length} points for ${test}`);
                 test_points[test] = resp;
 
-                deltas = flatten(Object.entries(test_points).map(x => find_deltas(x[1])).sort((x, y) => x.commit_date < y.commit_date));
+                deltas = flatten(Object.entries(test_points).map(x => find_deltas(x[1])).sort((x, y) => x.sequence_n < y.sequence_n));
                 fill_deltas_table(deltas);
                 update_plots();
                 $("body").removeClass('working');
@@ -54,8 +54,6 @@ function update_plots() {
         yaxis: { title: "Benchmarked Value" }, // default when there are otherwise no traces
         xaxis: {
             showgrid: false,                  // remove the x-axis grid lines
-            type: 'date',
-            tickformat: "%B, %Y",             // customize the date format to "month, day"
             autorange: true,
             rangemode: 'normal',
             domain: [0.12*n_traces, 0.95]
@@ -78,7 +76,7 @@ function update_plots() {
         x['yaxis'] = short_axis_name;
 
         data.push({
-            x: points.map(r => Date.parse(r.commit_date)),
+            x: points.map(r => r.sequence_n),
             y: points.map(r => r.result_value),
             yaxis: short_axis_name,
             text: points.map(r => r.commit_sha),
@@ -118,13 +116,13 @@ function find_deltas(points) {
     return deltas;
 }
 
-let selected_commit;
+let selected_commit = null;
 
 function deltas_annots(deltas) {
     let anns = {};
     for (let x of deltas) {
         anns[x.commit_sha] = {
-            x: Date.parse(x.commit_date),
+            x: x.sequence_n,
             y: x.result_value,
             xref: 'x',
             yref: x.yaxis,
