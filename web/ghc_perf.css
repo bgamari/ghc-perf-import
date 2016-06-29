@@ -3,8 +3,8 @@ body.working #results {display: none;}
 body #please-wait {display: none;}
 body #results {display: block;}
 
-commit {
-    color: rgb(45, 96, 249);
+.commit {
+    color: #223399;
 }
 
 td {
@@ -12,7 +12,7 @@ td {
 }
 
 #deltas tbody tr:hover {
-    background-color: #ccc;
+    background-color: #ddd;
 }
 
 tr.selected {
@@ -22,6 +22,9 @@ tr.selected {
 div.tests {
     flex: 0 0.1 10em;
 }
+
+.improvement {color: darkgreen;}
+.regression {color: darkred;}
 
 div.tests ul {
     list-style: none;

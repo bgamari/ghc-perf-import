@@ -121,7 +121,7 @@ function find_deltas(points) {
         const fst = pair[0];
         const snd = pair[1];
         const delta = (snd.result_value - fst.result_value) / snd.result_value;
-        if (delta > threshold) {
+        if (Math.abs(delta) > threshold) {
             snd['delta'] = delta;
             deltas.push(snd);
         }
@@ -153,9 +153,13 @@ function fill_deltas_table(deltas) {
         tbl.append(
             $('<tr>')
                 .append($("<td/>").html(new Date(x.commit_date).toDateString()))
-                .append($("<td/>").html($(`<span class="commit">${x.commit_sha}</span>`)))
+                .append($("<td/>")
+                        .html(x.commit_sha)
+                        .addClass('commit'))
                 .append($("<td/>").html(x.test_name))
-                .append($("<td/>").html((100*x.delta).toPrecision(2) + '%'))
+                .append($("<td/>")
+                        .html((100*x.delta).toPrecision(2) + '%')
+                        .addClass(x.delta > 0 ? 'regression' : 'improvement'))
                 .append($("<td/>").html(x.commit_title))
                 .on('click', ev => {
                     selected_commit = x.commit_sha;
@@ -180,6 +184,9 @@ function update_test_filter() {
     }
 }
 
-populate_tests();
-Plotly.plot(graph_div, [], {});
-update_plots();
+$(document).ready(() => {
+    populate_tests();
+    Plotly.plot(graph_div, [], {});
+    update_plots();
+    update_test_filter();
+});
