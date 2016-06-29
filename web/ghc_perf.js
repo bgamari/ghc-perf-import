@@ -7,26 +7,29 @@ function populate_tests() {
         .then(resp => {
             return resp.json().then(resp => {
                 for (let test of resp) {
-                    const input = $(`<input type="checkbox" name="${test.test_name}">`)
-                        .on('change', (ev) => {
-                            if (ev.target.checked) {
-                                add_test(ev.target.name);
-                            } else {
-                                delete test_points[ev.target.name];
-                                fill_deltas_table(deltas);
-                            }
-                        });
+                    const input = $("<input type='checkbox'>")
+                          .attr('name', test.test_name)
+                          .attr('id', test.test_name)
+                          .on('change', (ev) => {
+                              if (ev.target.checked) {
+                                  add_test(ev.target.name);
+                              } else {
+                                  delete test_points[ev.target.name];
+                                  update_plots();
+                                  fill_deltas_table(deltas);
+                              }
+                          });
                     const label = $("<label/>")
-                          .attr('ref', test.test_name)
+                          .attr('for', test.test_name)
                           .html(test.test_name);
-                    $('#tests').append($(`<li/>`).append(input).append(label));
+                    $('div.tests ul').append($(`<li/>`).append(input).append(label));
                 }
             });
         });
 }
 
 const graph_div = document.getElementById('plot');
-// map from test name to its points
+// map from test name to {points, yaxis}
 let test_points = {};
 
 function add_test(test) {
@@ -37,9 +40,12 @@ function add_test(test) {
         .then(resp => {
             return resp.json().then(resp => {
                 console.log(`Have ${resp.length} points for ${test}`);
-                test_points[test] = resp;
+                test_points[test] = { points: resp, yaxis: null };
 
-                deltas = flatten(Object.entries(test_points).map(x => find_deltas(x[1])).sort((x, y) => x.sequence_n < y.sequence_n));
+                deltas = flatten(
+                    Object.entries(test_points)
+                        .map(([_, {points: points}]) => find_deltas(points))
+                        .sort((x, y) => x.sequence_n < y.sequence_n));
                 fill_deltas_table(deltas);
                 update_plots();
                 $("body").removeClass('working');
@@ -48,6 +54,7 @@ function add_test(test) {
 }
 
 function update_plots() {
+    const axis_width = 0.05;
     const n_traces = Object.keys(test_points).length;
     let data = [];
     let layout = {
@@ -56,24 +63,22 @@ function update_plots() {
             showgrid: false,                  // remove the x-axis grid lines
             autorange: true,
             rangemode: 'normal',
-            domain: [0.12*n_traces, 0.95]
+            domain: [axis_width*n_traces, 0.95]
         },
         margin: {
             l: 70, b: 80, r: 10, t: 20
-        },
-        annotations: deltas_annots(deltas)
+        }
     };
     let trace_n = 0;
-    for (let x of Object.entries(test_points)) {
+    for (let [test_name, {points: points}] of Object.entries(test_points)) {
         const axis_name = trace_n > 0 ? `yaxis${trace_n+1}` : 'yaxis';
         const short_axis_name = trace_n > 0 ? `y${trace_n+1}` : 'y';
-        const test_name = x[0];
-        const points = x[1];
-        layout[axis_name] = { title: test_name, position: 0.12*trace_n };
+        layout[axis_name] = { title: test_name,
+                              position: axis_width*trace_n };
         if (trace_n > 0) {
             layout[axis_name]['overlaying'] = 'y';
         }
-        x['yaxis'] = short_axis_name;
+        test_points[test_name].yaxis = short_axis_name;
 
         data.push({
             x: points.map(r => r.sequence_n),
@@ -86,6 +91,10 @@ function update_plots() {
         });
         trace_n = trace_n + 1;
     }
+
+    // This needs to be done after the above loop so that yaxis is filled in
+    layout.annotations = deltas_annots(deltas);
+
     Plotly.purge(graph_div);
     Plotly.newPlot(graph_div, data, layout);
     graph_div.on('plotly_hover', function (ev) {
@@ -124,7 +133,7 @@ function deltas_annots(deltas) {
             x: x.sequence_n,
             y: x.result_value,
             xref: 'x',
-            yref: x.yaxis,
+            yref: test_points[x.test_name].yaxis,
             text: x.commit_sha.slice(0,8),
             font: selected_commit == x.commit_sha ? {color: 'red'} : {}
         };
@@ -135,7 +144,7 @@ function deltas_annots(deltas) {
 function fill_deltas_table(deltas) {
     const tbl = $("#deltas tbody");
     tbl.children().remove();
-    deltas.forEach(x => {
+    deltas.sort((x,y) => x.commit_date < y.commit_date).forEach(x => {
         tbl.append(
             $('<tr>')
                 .append($("<td/>").html(new Date(x.commit_date).toDateString()))
@@ -144,8 +153,10 @@ function fill_deltas_table(deltas) {
                 .append($("<td/>").html((100*x.delta).toPrecision(2) + '%'))
                 .append($("<td/>").html(x.commit_title))
                 .on('click', ev => {
-                        selected_commit = x.commit_sha;
-                        Plotly.relayout(graph_div, { 'annotations': deltas_annots(deltas) });
+                    selected_commit = x.commit_sha;
+                    $('.selected').removeClass('selected');
+                    $(ev.currentTarget).addClass('selected');
+                    Plotly.relayout(graph_div, { 'annotations': deltas_annots(deltas) });
                 })
                 .attr('data-commit', x.commit_sha)
                 .attr('data-test_name', x.test_name)
@@ -153,9 +164,17 @@ function fill_deltas_table(deltas) {
     });
 }
 
+function update_test_filter() {
+    const filters = $('#test-filter')[0].value.split();
+    for (let x of $('.tests li')) {
+        if (filters.every(filter => x.textContent.includes(filter))) {
+            $(x).show();
+        } else {
+            $(x).hide();
+        }
+    }
+}
+
 populate_tests();
 Plotly.plot(graph_div, [], {});
 update_plots();
-
-//add_test('compile-allocs/AbsConc3');
-//add_test('compile-allocs/AbstractEval2');

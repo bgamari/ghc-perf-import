@@ -11,10 +11,34 @@ td {
     padding: 0 2em;
 }
 
-#deltas tr:hover {
+#deltas tbody tr:hover {
     background-color: #ccc;
 }
 
 tr.selected {
     background-color: #ffc;
+}
+
+div.tests {
+    flex: 0 0.1 10em;
+}
+
+div.tests ul {
+    list-style: none;
+    overflow: scroll;
+    max-height: 80vh;
+    padding-left: 0;
+}
+
+div.tests ul li {
+    list-style: none;
+}
+
+div#results {
+    flex: 1 0.9 auto;
+}
+
+div#plot {
+    width: 1600px;
+    height: 800px;
 }
