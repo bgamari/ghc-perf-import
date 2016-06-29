@@ -67,4 +67,7 @@ CREATE VIEW results_view AS
     JOIN branch_commits USING (commit_id)
     JOIN branches USING (branch_id);
 
+CREATE USER ghc_perf_web;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO ghc_perf_web;
+
 INSERT INTO test_envs (test_env_name) VALUES ('nomeata');
