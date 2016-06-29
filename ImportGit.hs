@@ -95,7 +95,7 @@ importBranch conn repo branchName = do
                           INSERT INTO branch_commits (branch_id, commit_id, sequence_n)
                           VALUES (?,?,?)
                           |]
-                      [ (branchId, commitId, n)
+                      [ (branchId, commitId, negate n)
                       | (n, commit) <- zip [0::Int ..] commits
                       , Just commitId <- pure $ M.lookup commit commitIds
                       ]
