@@ -19,7 +19,7 @@
             <div class="tests">
                 <h2>Tests</h2>
                 <div>
-                    <label for="test-filter" >Change threshold</label>
+                    <label for="test-filter" >Filter tests</label>
                     <input id="test-filter" type="text" onkeydown="update_test_filter();">
                 </div>
                 <ul></ul>
@@ -28,6 +28,7 @@
             <div id="results">
                 <div id="plot" style="width: 1600px; height: 800px;"></div>
                 <div>
+                    <label for="delta-threshold">Change threshold</label>
                     <input id="delta-threshold" type="number" value="5" onchange="update_all();">%
                 </div>
                 <table id="deltas">
