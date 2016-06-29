@@ -54,7 +54,7 @@ importCommits conn repo = do
 
 importBranch :: Connection -> FilePath -> String -> IO ()
 importBranch conn repo branchName = do
-    let args = ["-C", repo, "rev-list", branchName]
+    let args = ["-C", repo, "rev-list", "--topo-order", branchName]
     commits <- lines <$> readProcess "git" args ""
 
     execute conn
