@@ -4,6 +4,7 @@
         <title>hello world</title>
         <meta charset="utf-8" />
         <link rel="stylesheet" href="ghc_perf.css" type="text/css" />
+        <link rel="stylesheet" href="spinner.css" type="text/css" />
         <script src="https://code.jquery.com/jquery-3.0.0.min.js" type="application/javascript" ></script>
         <script src="https://cdn.plot.ly/plotly-latest.min.js" type="application/javascript" ></script>
         <!-- <script src="jquery-3.0.0.js"></script> -->
@@ -12,7 +13,15 @@
     <body>
         <h1>GHC Performance</h1>
         <div id="please-wait">
-            <p>Please Wait...</p>
+            <div class="overlay">
+                <div class="spinner">
+                    <div class="bounce1"></div>
+                    <div class="bounce2"></div>
+                    <div class="bounce3"></div>
+                </div>
+                <h2 style="text-align: center;">Please Wait...</h2>
+            </div>
+            <div class="background" ></div>
         </div>
 
         <div style="display: flex;">
