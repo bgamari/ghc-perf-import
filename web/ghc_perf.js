@@ -2,8 +2,10 @@ Plotly.setPlotConfig({ logging: 2 });
 
 const limit = 100000;
 
+root_url = "http://home.smart-cactus.org:8080";
+
 function populate_tests() {
-    fetch(`http://home.smart-cactus.org:8080/tests`)
+    fetch(`${root_url}/tests`)
         .then(resp => {
             return resp.json().then(resp => {
                 for (let test of resp) {
@@ -36,7 +38,7 @@ function add_test(test) {
     console.log(`Adding test ${test}`);
 
     $("body").addClass('working');
-    fetch(`http://home.smart-cactus.org:8080/results_view?test_name=eq.${test}&branch_name=eq.master&test_env=eq.nomeata&order=sequence_n&limit=${limit}`)
+    fetch(`${root_url}/results_view?test_name=eq.${test}&branch_name=eq.master&test_env=eq.nomeata&order=sequence_n&limit=${limit}`)
         .then(resp => {
             return resp.json().then(resp => {
                 console.log(`Have ${resp.length} points for ${test}`);
