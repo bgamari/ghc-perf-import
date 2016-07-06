@@ -7,6 +7,7 @@
         <link rel="stylesheet" href="spinner.css" type="text/css" />
         <script src="https://code.jquery.com/jquery-3.0.0.min.js" type="application/javascript" ></script>
         <script src="https://cdn.plot.ly/plotly-latest.min.js" type="application/javascript" ></script>
+        <script src="bundle.js" type="application/javascript" ></script>
     </head>
     <body>
         <h1>GHC Performance</h1>
@@ -27,7 +28,7 @@
                 <h2>Tests</h2>
                 <div>
                     <label for="test-filter" >Filter tests</label>
-                    <input id="test-filter" type="text" onkeydown="update_test_filter();">
+                    <input id="test-filter" type="text" >
                 </div>
                 <ul></ul>
             </div>
@@ -36,7 +37,7 @@
                 <div id="plot" style="width: 1600px; height: 800px;"></div>
                 <div>
                     <label for="delta-threshold">Change threshold</label>
-                    <input id="delta-threshold" type="number" value="5" onchange="update_all();">%
+                    <input id="delta-threshold" type="number" value="5" >%
                 </div>
                 <table id="deltas">
                     <thead>
@@ -52,7 +53,5 @@
                 </table>
             </div>
         </div>
-
-        <script src="bundle.js" type="application/javascript" ></script>
     </body>
 </html>

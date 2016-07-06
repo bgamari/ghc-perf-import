@@ -7,6 +7,11 @@ const limit = 100000;
 
 const root_url = "http://home.smart-cactus.org:8080";
 
+let graph_div;
+
+// map from test name to {points, yaxis}
+let test_points = {};
+
 function populate_tests() {
     fetch(`${root_url}/tests`)
         .then(resp => {
@@ -33,11 +38,16 @@ function populate_tests() {
         });
 }
 
-const graph_div = document.getElementById('plot');
-// map from test name to {points, yaxis}
-let test_points = {};
+function smooth_points(points, alpha) {
+    let accum = 0;
+    for (let p of points) {
+        accum = alpha * accum + (1-alpha) * p.result_value;
+        p.result_value = accum;
+    }
+    return points;
+}
 
-function add_test(test) {
+function add_test(test, smoothing) {
     console.log(`Adding test ${test}`);
 
     $("body").addClass('working');
@@ -45,7 +55,9 @@ function add_test(test) {
         .then(resp => {
             return resp.json().then(resp => {
                 console.log(`Have ${resp.length} points for ${test}`);
-                test_points[test] = { points: resp, yaxis: null };
+                let smoothing = 0;
+                if (test.includes('compile-time')) smoothing = 0.2;
+                test_points[test] = { points: smooth_points(resp, smoothing), yaxis: null };
                 update_all();
             });
         });
@@ -190,8 +202,11 @@ function update_test_filter() {
 }
 
 $(document).ready(() => {
+    graph_div = document.getElementById('plot');
     populate_tests();
     Plotly.plot(graph_div, [], {});
     update_plots();
     update_test_filter();
+    $('#delta-threshold').on('change', update_all);
+    $('#test-filter').on('keydown', update_test_filter);
 });
