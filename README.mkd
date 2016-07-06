@@ -90,7 +90,19 @@ WHERE old.test_env = new.test_env AND old.test_name = new.test_name
 GROUP BY (new.test_env, new.test_name)
 ```
 
-To get a summary of the largest changes,
+To get a summary of the largest changes in the `compile-allocs/*` tests,
 ```
-SELECT * FROM deltas WHERE abs(delta) > 0 ORDER BY rel_delta DESC;
+SELECT *
+FROM deltas
+WHERE abs(delta) > 0
+  AND test_name ~ 'compile-allocs/'
+ORDER BY rel_delta DESC;
+```
+
+Or to see the effect of a single commit,
+```
+SELECT test_name, delta, rel_delta
+FROM deltas
+WHERE commit_sha = '673efccb3b348e9daf23d9e65460691bbea8586e'
+ORDER BY rel_delta DESC;
 ```

@@ -76,6 +76,7 @@ CREATE VIEW deltas AS
     SELECT   commits.commit_sha
            , commit_date
            , commit_title
+           , tests.test_name
            , rx.result_value AS result_value_1
            , ry.result_value AS result_value_2
            , (ry.result_value - rx.result_value) AS delta
@@ -83,6 +84,7 @@ CREATE VIEW deltas AS
     FROM   results AS rx
          , results AS ry
          , test_envs
+         , tests
          , branch_commits AS brx
          , branch_commits AS bry
          , commits
@@ -91,5 +93,6 @@ CREATE VIEW deltas AS
       AND brx.sequence_n = (bry.sequence_n - 1)
       AND rx.test_env_id = ry.test_env_id
       AND rx.test_id = ry.test_id
+      AND tests.test_id = rx.test_id
       AND test_envs.test_env_id = rx.test_env_id
       AND commits.commit_id = bry.commit_id;
