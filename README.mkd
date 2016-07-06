@@ -74,3 +74,18 @@ To produce terribly-formatted plots,
 ```
 $ i=0; while IFS= read -r tests; do echo $tests; ./plot.py -o $i.svg $tests; let i=i+1; done < tests.grouped
 ```
+
+
+
+
+To compute a comparison between two commits,
+```
+SELECT new.test_env, new.test_name, array_agg(old.result_value), array_agg(new.result_value)
+FROM (
+select * from results_view where commit_sha='ba46dd060f959e3c96a74c1546946c3f8bf84dd0'
+) AS old, (
+    select * from results_view where commit_sha='ba46dd060f959e3c96a74c1546946c3f8bf84dd0'
+) AS new
+WHERE old.test_env = new.test_env AND old.test_name = new.test_name
+GROUP BY (new.test_env, new.test_name)
+```
