@@ -89,3 +89,8 @@ select * from results_view where commit_sha='ba46dd060f959e3c96a74c1546946c3f8bf
 WHERE old.test_env = new.test_env AND old.test_name = new.test_name
 GROUP BY (new.test_env, new.test_name)
 ```
+
+To get a summary of the largest changes,
+```
+SELECT * FROM deltas WHERE abs(delta) > 0 ORDER BY rel_delta DESC;
+```

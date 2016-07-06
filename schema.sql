@@ -71,3 +71,25 @@ CREATE USER ghc_perf_web;
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO ghc_perf_web;
 
 INSERT INTO test_envs (test_env_name) VALUES ('nomeata');
+
+CREATE VIEW deltas AS
+    SELECT   commits.commit_sha
+           , commit_date
+           , commit_title
+           , rx.result_value AS result_value_1
+           , ry.result_value AS result_value_2
+           , (ry.result_value - rx.result_value) AS delta
+           , (ry.result_value - rx.result_value) / NULLIF(rx.result_value, 0) AS rel_delta
+    FROM   results AS rx
+         , results AS ry
+         , test_envs
+         , branch_commits AS brx
+         , branch_commits AS bry
+         , commits
+    WHERE rx.commit_id = brx.commit_id
+      AND ry.commit_id = bry.commit_id
+      AND brx.sequence_n = (bry.sequence_n - 1)
+      AND rx.test_env_id = ry.test_env_id
+      AND rx.test_id = ry.test_id
+      AND test_envs.test_env_id = rx.test_env_id
+      AND commits.commit_id = bry.commit_id;
