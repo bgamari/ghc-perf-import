@@ -12,6 +12,13 @@ let graph_div;
 // map from test name to {points, yaxis}
 let test_points = {};
 
+function buildQueryString() {
+    let params = new URLSearchParams();
+    params.set('tests', Object.keys(test_points));
+    params.set('test_filter', $('#test-filter').text());
+    return params.toString();
+}
+
 function populate_tests() {
     fetch(`${root_url}/tests`)
         .then(resp => {
@@ -28,6 +35,7 @@ function populate_tests() {
                                   update_plots();
                                   fill_deltas_table(deltas);
                               }
+                              history.pushState({tests: Object.keys(test_points), test_filter: $('#test-filter').text()}, 'page 2', '?'+buildQueryString());
                           });
                     const label = $("<label/>")
                           .attr('for', test.test_name)
@@ -206,7 +214,15 @@ $(document).ready(() => {
     populate_tests();
     Plotly.plot(graph_div, [], {});
     update_plots();
+
+    const params = new URLSearchParams(window.location);
+    $('#test-filter').text = params.get('test_filter');
     update_test_filter();
+
+    for (let test in params.get('tests')) {
+        $(`#${test}`).checked = true;
+    }
+
     $('#delta-threshold').on('change', update_all);
     $('#test-filter').on('keydown', update_test_filter);
 });
