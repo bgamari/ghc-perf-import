@@ -1,8 +1,11 @@
+const entries = require('object.entries');
+const values = require('object.values');
+
 Plotly.setPlotConfig({ logging: 2 });
 
 const limit = 100000;
 
-root_url = "http://home.smart-cactus.org:8080";
+const root_url = "http://home.smart-cactus.org:8080";
 
 function populate_tests() {
     fetch(`${root_url}/tests`)
@@ -51,7 +54,7 @@ function add_test(test) {
 function update_all() {
     $("body").addClass('working');
     deltas = flatten(
-        Object.entries(test_points)
+        entries(test_points)
             .map(([_, {points: points}]) => find_deltas(points))
             .sort((x, y) => x.sequence_n < y.sequence_n));
     fill_deltas_table(deltas);
@@ -76,7 +79,7 @@ function update_plots() {
         }
     };
     let trace_n = 0;
-    for (let [test_name, {points: points}] of Object.entries(test_points)) {
+    for (let [test_name, {points: points}] of entries(test_points)) {
         const axis_name = trace_n > 0 ? `yaxis${trace_n+1}` : 'yaxis';
         const short_axis_name = trace_n > 0 ? `y${trace_n+1}` : 'y';
         layout[axis_name] = { title: test_name,
@@ -145,7 +148,7 @@ function deltas_annots(deltas) {
             font: selected_commit == x.commit_sha ? {color: 'red'} : {}
         };
     }
-    return Object.values(anns);
+    return values(anns);
 }
 
 function fill_deltas_table(deltas) {
