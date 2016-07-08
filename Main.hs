@@ -1,8 +1,11 @@
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 import Database.PostgreSQL.Simple
 import Database.PostgreSQL.Simple.SqlQQ
+import Database.PostgreSQL.Simple.Types
 import qualified Data.Map as M
+import qualified Data.Set as S
 import Data.Int
 import Control.Monad (void)
 import Data.DList (DList, singleton)
@@ -70,13 +73,31 @@ args =
 getFileCommit :: FilePath -> Commit
 getFileCommit = dropExtensions . takeFileName
 
+findMissingCommits :: Connection -> TestEnvName -> [Commit] -> IO (S.Set Commit)
+findMissingCommits conn testEnv commits =
+    S.fromList <$> query conn
+        [sql| SELECT x.column1
+              FROM ? as x
+              WHERE x.column1 NOT IN (
+                  SELECT commit_sha
+                  FROM results_view
+                  WHERE test_env = ?
+              )
+            |]
+        (Values ["text"] (map Only commits), testEnv)
+
+
 main :: IO ()
 main = do
     (testEnv, files) <- execParser $ info (helper <*> args) mempty
     let printExc :: String -> SomeException -> IO ()
         printExc fname exc = putStrLn $ fname++": "++show exc
+
     conn <- connect connInfo
-    forM_ files $ \fname -> handle (printExc fname) $ do
+    missing <- findMissingCommits conn testEnv (map getFileCommit files)
+    let toImport = filter (\fname -> getFileCommit fname `S.member` missing) files
+
+    forM_ toImport $ \fname -> handle (printExc fname) $ do
         let commit = getFileCommit fname
         results <- M.fromList <$> parseResults fname
         putStrLn $ commit++": "++show (M.size results)++" results"
