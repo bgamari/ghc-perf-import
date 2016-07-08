@@ -4,6 +4,7 @@ import Database.PostgreSQL.Simple
 import Database.PostgreSQL.Simple.SqlQQ
 import qualified Data.Map as M
 import Data.Int
+import Control.Monad (void)
 import Data.DList (DList, singleton)
 import Data.Foldable
 import Options.Applicative
@@ -14,16 +15,9 @@ import Types
 import Slurp
 import SummarizeResults
 
-ingest :: ConnectInfo
-       -> Commit -> TestEnvName -> M.Map TestName Double -> IO ()
-ingest ci commit testEnv tests = do
-    conn <- connect ci
-    ingest' conn commit testEnv tests
-    close conn
-
-ingest' :: Connection
-        -> Commit -> TestEnvName -> M.Map TestName Double -> IO Int64
-ingest' conn commit testEnv tests = withTransaction conn $ do
+ingest :: Connection
+       -> Commit -> TestEnvName -> M.Map TestName Double -> IO Int64
+ingest conn commit testEnv tests = withTransaction conn $ do
     executeMany conn
         [sql| INSERT INTO tests (test_name)
               VALUES (?)
@@ -73,13 +67,19 @@ args =
       <$> option str (short 'e' <> long "env" <> help "test environment name" <> metavar "ENV")
       <*> some (argument str $ help "log files" <> metavar "FILE")
 
+getFileCommit :: FilePath -> Commit
+getFileCommit = dropExtensions . takeFileName
+
 main :: IO ()
 main = do
     (testEnv, files) <- execParser $ info (helper <*> args) mempty
     let printExc :: String -> SomeException -> IO ()
         printExc fname exc = putStrLn $ fname++": "++show exc
+    conn <- connect connInfo
     forM_ files $ \fname -> handle (printExc fname) $ do
-        let commit = dropExtensions $ takeFileName fname
+        let commit = getFileCommit fname
         results <- M.fromList <$> parseResults fname
         putStrLn $ commit++": "++show (M.size results)++" results"
-        ingest connInfo commit testEnv results
+        void $ ingest conn commit testEnv results
+
+    close conn
