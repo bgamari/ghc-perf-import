@@ -19,6 +19,22 @@ function buildQueryString() {
     return params.toString();
 }
 
+function populate_branches() {
+    fetch(`${root_url}/branches`)
+        .then(resp => {
+            return resp.json().then(resp => {
+                const sel = $("#branch");
+                for (let branch of resp) {
+                    sel.append(
+                        $("<option/>")
+                            .text(branch.branch_name)
+                            .attr('value', branch.branch_name)
+                    );
+                }
+            });
+        });
+}
+
 function populate_tests() {
     fetch(`${root_url}/tests`)
         .then(resp => {
@@ -55,11 +71,12 @@ function smooth_points(points, alpha) {
     return points;
 }
 
-function add_test(test, smoothing) {
+function add_test(test) {
     console.log(`Adding test ${test}`);
 
+    const branch = $('#branch')[0].value;
     $("body").addClass('working');
-    fetch(`${root_url}/results_view?test_name=eq.${test}&branch_name=eq.master&test_env=eq.nomeata&order=sequence_n&limit=${limit}`)
+    fetch(`${root_url}/results_view?test_name=eq.${test}&branch_name=eq.${branch}&test_env=eq.nomeata&order=sequence_n&limit=${limit}`)
         .then(resp => {
             return resp.json().then(resp => {
                 console.log(`Have ${resp.length} points for ${test}`);
@@ -211,6 +228,7 @@ function update_test_filter() {
 
 $(document).ready(() => {
     graph_div = document.getElementById('plot');
+    populate_branches();
     populate_tests();
     Plotly.plot(graph_div, [], {});
     update_plots();
@@ -223,6 +241,10 @@ $(document).ready(() => {
         $(`#${test}`).checked = true;
     }
 
+    $('#branch').on('change', function() {
+        const tests = Object.keys(test_points);
+        tests.map(add_test);
+    });
     $('#delta-threshold').on('change', update_all);
     $('#test-filter').on('keydown', update_test_filter);
 });

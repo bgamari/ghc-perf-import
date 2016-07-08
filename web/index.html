@@ -10,7 +10,14 @@
         <script src="bundle.js" type="application/javascript" ></script>
     </head>
     <body>
-        <h1>GHC Performance</h1>
+        <header>
+            <h1>GHC Performance</h1>
+            <span id="branch-sel" style="float: right;">
+                <label for="branch">Branch</label>
+                <select id="branch"></select>
+            </span>
+        </header>
+
         <div id="please-wait">
             <div class="overlay">
                 <div class="spinner">
