@@ -71,6 +71,7 @@ CREATE USER ghc_perf_web;
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO ghc_perf_web;
 
 INSERT INTO test_envs (test_env_name) VALUES ('nomeata');
+INSERT INTO test_envs (test_env_name) VALUES ('bgamari');
 
 CREATE VIEW deltas AS
     SELECT   commits.commit_sha
