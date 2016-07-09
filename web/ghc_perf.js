@@ -130,7 +130,7 @@ function update_plots() {
             x: points.map(r => r.sequence_n),
             y: points.map(r => r.result_value),
             yaxis: short_axis_name,
-            text: points.map(r => r.commit_sha),
+            text: points.map(r => `${r.commit_sha}    (${r.commit_date})`),
             type: "scatter",
             line: { width: 1 },
             name: test_name
@@ -144,9 +144,10 @@ function update_plots() {
     Plotly.purge(graph_div);
     Plotly.newPlot(graph_div, data, layout);
     graph_div.on('plotly_hover', function (ev) {
-        const commit = ev.points[0].data.text[ev.points[0].pointNumber];
+        const seq_n = ev.xvals[ev.points[0].pointNumber];
+        const commit = test_points;
         $(".selected").removeClass('selected');
-        $(`[data-commit=${commit}]`).addClass('selected');
+        $(`[data-sequence-n="${seq_n}"]`).addClass('selected');
     });
 }
 
@@ -210,7 +211,8 @@ function fill_deltas_table(deltas) {
                     Plotly.relayout(graph_div, { 'annotations': deltas_annots(deltas) });
                 })
                 .attr('data-commit', x.commit_sha)
-                .attr('data-test_name', x.test_name)
+                .attr('data-sequence-n', x.sequence_n)
+                .attr('data-test-name', x.test_name)
         );
     });
 }
