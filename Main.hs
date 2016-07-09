@@ -64,16 +64,16 @@ ingest conn commit testEnv tests = withTransaction conn $ do
 connInfo = defaultConnectInfo { connectDatabase = "ghc_perf", connectUser = "ben", connectPassword = "mudpie" }
 
 
-args :: Parser (TestEnvName, [FilePath])
+args :: Parser (TestEnvName, S.Set FilePath)
 args =
     (,)
       <$> option str (short 'e' <> long "env" <> help "test environment name" <> metavar "ENV")
-      <*> some (argument str $ help "log files" <> metavar "FILE")
+      <*> fmap S.fromList (some $ argument str $ help "log files" <> metavar "FILE")
 
 getFileCommit :: FilePath -> Commit
 getFileCommit = dropExtensions . takeFileName
 
-findMissingCommits :: Connection -> TestEnvName -> [Commit] -> IO (S.Set Commit)
+findMissingCommits :: Connection -> TestEnvName -> S.Set Commit -> IO (S.Set Commit)
 findMissingCommits conn testEnv commits =
     S.fromList . map (\(Only x) -> x) <$> query conn
         [sql| SELECT x.column1
@@ -84,7 +84,7 @@ findMissingCommits conn testEnv commits =
                   WHERE test_env = ?
               )
             |]
-        (Values ["text"] (map Only commits), testEnv)
+        (Values ["text"] (map Only $ S.toList commits), testEnv)
 
 
 main :: IO ()
@@ -94,9 +94,13 @@ main = do
         printExc fname exc = putStrLn $ fname++": "++show exc
 
     conn <- connect connInfo
-    missing <- findMissingCommits conn testEnv (map getFileCommit files)
-    let toImport = filter (\fname -> getFileCommit fname `S.member` missing) files
+    let commitFiles :: M.Map Commit FilePath
+        commitFiles = foldMap (\fname -> M.singleton (getFileCommit fname) fname) files
+    missing <- findMissingCommits conn testEnv (M.keysSet commitFiles)
+    let toImport :: M.Map Commit FilePath
+        toImport = commitFiles `M.intersection` M.fromSet (const ()) missing
 
+    putStrLn $ "Going to import "++show (M.size toImport)++" commits"
     forM_ toImport $ \fname -> handle (printExc fname) $ do
         let commit = getFileCommit fname
         results <- M.fromList <$> parseResults fname
