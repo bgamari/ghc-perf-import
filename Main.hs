@@ -75,7 +75,7 @@ getFileCommit = dropExtensions . takeFileName
 
 findMissingCommits :: Connection -> TestEnvName -> [Commit] -> IO (S.Set Commit)
 findMissingCommits conn testEnv commits =
-    S.fromList <$> query conn
+    S.fromList . map (\(Only x) -> x) <$> query conn
         [sql| SELECT x.column1
               FROM ? as x
               WHERE x.column1 NOT IN (
