@@ -100,7 +100,7 @@ main = do
     let toImport :: M.Map Commit FilePath
         toImport = commitFiles `M.intersection` M.fromSet (const ()) missing
 
-    putStrLn $ "Going to import "++show (M.size toImport)++" commits"
+    putStrLn $ "Going to import "++show (M.size toImport)++" of "++show (S.size files)++" commits"
     forM_ toImport $ \fname -> handle (printExc fname) $ do
         let commit = getFileCommit fname
         results <- M.fromList <$> parseResults fname
