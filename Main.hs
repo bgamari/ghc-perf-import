@@ -80,8 +80,10 @@ findMissingCommits conn testEnv commits =
               FROM ? as x
               WHERE x.column1 NOT IN (
                   SELECT commit_sha
-                  FROM results_view
-                  WHERE test_env = ?
+                  FROM results
+                  JOIN test_envs ON (results.test_env_id = test_envs.test_env_id)
+                  JOIN commits ON (results.commit_id = commits.commit_id)
+                  WHERE test_envs.test_env_name = ?
               )
             |]
         (Values ["text"] (map Only $ S.toList commits), testEnv)
