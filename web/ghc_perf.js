@@ -44,10 +44,12 @@ function populate_tests() {
                           .attr('name', test.test_name)
                           .attr('id', test.test_name)
                           .on('change', (ev) => {
+                              const test_name = ev.target.name;
                               if (ev.target.checked) {
-                                  add_test(ev.target.name);
+                                  add_test(test_name);
                               } else {
-                                  delete test_points[ev.target.name];
+                                  delete test_points[test_name];
+                                  deltas = deltas.filter(x => x.test_name != test_name);
                                   update_plots();
                                   fill_deltas_table(deltas);
                               }
