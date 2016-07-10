@@ -78,16 +78,16 @@ findMissingCommits conn testEnv commits =
     S.fromList . map (\(Only x) -> x) <$> query conn
         [sql| SELECT x.column1
               FROM ? as x
-              WHERE x.column1 NOT IN (
+              WHERE NOT EXISTS (
                   SELECT commit_sha
                   FROM results
                   JOIN test_envs ON (results.test_env_id = test_envs.test_env_id)
                   JOIN commits ON (results.commit_id = commits.commit_id)
                   WHERE test_envs.test_env_name = ?
+                    AND commits.commit_sha = x.column1
               )
             |]
         (Values ["text"] (map Only $ S.toList commits), testEnv)
-
 
 main :: IO ()
 main = do
