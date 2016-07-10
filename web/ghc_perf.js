@@ -220,9 +220,9 @@ function fill_deltas_table(deltas) {
 }
 
 function update_test_filter() {
-    const filters = $('#test-filter')[0].value.split();
+    const filters = $('#test-filter')[0].value.split(' ').map(String.toLowerCase);
     for (let x of $('.tests li')) {
-        if (filters.every(filter => x.textContent.includes(filter))) {
+        if (filters.every(filter => x.textContent.toLowerCase().includes(filter))) {
             $(x).show();
         } else {
             $(x).hide();
