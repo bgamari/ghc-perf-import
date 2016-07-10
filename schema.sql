@@ -55,10 +55,14 @@ CREATE VIEW results_view AS
     SELECT   commits.commit_sha AS commit_sha
            , commits.commit_date AS commit_date
            , commits.commit_title AS commit_title
+           , commits.commit_id AS commit_id
            , branches.branch_name AS branch_name
+           , branches.branch_id AS branch_id
            , branch_commits.sequence_n AS sequence_n
            , test_envs.test_env_name AS test_env
            , tests.test_name AS test_name
+           , results.test_env_id AS test_env_id
+           , results.test_id AS test_id
            , results.result_value as result_value
     FROM results
     JOIN tests USING (test_id)
