@@ -237,8 +237,8 @@ $(document).ready(() => {
     Plotly.plot(graph_div, [], {});
     update_plots();
 
-    const params = new URLSearchParams(window.location);
-    $('#test-filter').text = params.get('test_filter');
+    const params = new URLSearchParams(window.location.search.slice(1));
+    $('#test-filter').text(params.get('test_filter'));
     update_test_filter();
 
     for (let test in params.get('tests')) {
