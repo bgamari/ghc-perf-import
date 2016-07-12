@@ -88,8 +88,9 @@ importBranch conn repo branchName = do
     execute conn [sql|
                      DELETE FROM branch_commits
                      WHERE commit_id IN ?
+                        OR branch_id = ?
                      |]
-                 (Only $ In $ M.elems commitIds)
+                 (In $ M.elems commitIds, branchId)
     n <- executeMany conn
                       [sql|
                           INSERT INTO branch_commits (branch_id, commit_id, sequence_n)
