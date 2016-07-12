@@ -241,7 +241,7 @@ $(document).ready(() => {
     $('#test-filter').text(params.get('test_filter'));
     update_test_filter();
 
-    for (let test in params.get('tests')) {
+    for (let test in params.get('tests').split(',')) {
         $(`#${test}`).checked = true;
     }
 
