@@ -101,3 +101,10 @@ CREATE VIEW deltas AS
       AND tests.test_id = rx.test_id
       AND test_envs.test_env_id = rx.test_env_id
       AND commits.commit_id = bry.commit_id;
+
+CREATE VIEW branches_view AS
+    SELECT branches.*, commits.*
+    FROM branches
+    JOIN branch_commits USING (branch_id)
+    JOIN commits USING (commit_id)
+    WHERE sequence_n = 0;
