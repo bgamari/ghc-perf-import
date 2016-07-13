@@ -5,6 +5,7 @@
         <meta charset="utf-8" />
         <link rel="stylesheet" href="ghc_perf.css" type="text/css" />
         <link rel="stylesheet" href="spinner.css" type="text/css" />
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
         <script src="https://code.jquery.com/jquery-3.0.0.min.js" type="application/javascript" ></script>
         <script src="https://cdn.plot.ly/plotly-latest.min.js" type="application/javascript" ></script>
         <script src="bundle.js" type="application/javascript" ></script>
@@ -12,10 +13,10 @@
     <body>
         <header>
             <h1>GHC Performance</h1>
-            <span id="branch-sel" style="float: right;">
-                <label for="branch">Branch</label>
-                <select id="branch"></select>
-            </span>
+            <div>
+                <span>Branch:</span>
+                <span id="current-branch" >unknown</span>
+            </div>
         </header>
 
         <div id="please-wait">
@@ -46,7 +47,7 @@
                     <label for="delta-threshold">Change threshold</label>
                     <input id="delta-threshold" type="number" value="5" >%
                 </div>
-                <table id="deltas">
+                <table id="deltas" class="table table-condensed">
                     <thead>
                         <tr>
                             <th>Date</th>
@@ -58,6 +59,14 @@
                     </thead>
                     <tbody></tbody>
                 </table>
+            </div>
+
+            <div>
+                <h2>Branches</h2>
+                <div id="branch-selector">
+                    <div class="list-group">
+                    </div>
+                </div>
             </div>
         </div>
     </body>

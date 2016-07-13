@@ -1,5 +1,6 @@
 const entries = require('object.entries');
 const values = require('object.values');
+const moment = require('moment');
 
 Plotly.setPlotConfig({ logging: 2 });
 
@@ -20,17 +21,34 @@ function buildQueryString() {
 }
 
 function populate_branches() {
-    fetch(`${root_url}/branches`)
+    const set_branch = (ev) => {
+        $('#branch-selector .active').removeClass('active');
+        $(ev.currentTarget).addClass('active');
+        $('#current-branch').text($(ev.currentTarget).attr('data-branch'));
+        const tests = Object.keys(test_points);
+        tests.map(add_test);
+    };
+    fetch(`${root_url}/branches_view`)
         .then(resp => {
             return resp.json().then(resp => {
-                const sel = $("#branch");
-                for (let branch of resp) {
+                const sel = $("#branch-selector > div");
+                for (let branch of resp.sort((x, y) => new Date(y.commit_date) - new Date(x.commit_date))) {
                     sel.append(
-                        $("<option/>")
-                            .text(branch.branch_name)
-                            .attr('value', branch.branch_name)
+                        $("<a/>")
+                            .attr('href', '#')
+                            .addClass('list-group-item')
+                            .attr('data-branch', branch.branch_name)
+                            .append($('<span/>')
+                                    .text(branch.branch_name)
+                                    .addClass('commit-name'))
+                            .append($('<time/>')
+                                    .addClass('badge')
+                                    .text(moment(branch.commit_date).fromNow())
+                                    .attr('datetime', branch.commit_date))
+                            .click(set_branch)
                     );
                 }
+                $('#branch-selector a[data-branch=master]').addClass('active');
             });
         });
 }
@@ -76,7 +94,7 @@ function smooth_points(points, alpha) {
 function add_test(test) {
     console.log(`Adding test ${test}`);
 
-    const branch = $('#branch')[0].value;
+    const branch = $('#branch-selector .active').attr('data-branch');
     $("body").addClass('working');
     fetch(`${root_url}/results_view?test_name=eq.${test}&branch_name=eq.${branch}&test_env=eq.nomeata&order=sequence_n&limit=${limit}`)
         .then(resp => {
@@ -148,8 +166,8 @@ function update_plots() {
     graph_div.on('plotly_hover', function (ev) {
         const seq_n = ev.xvals[ev.points[0].pointNumber];
         const commit = test_points;
-        $(".selected").removeClass('selected');
-        $(`[data-sequence-n="${seq_n}"]`).addClass('selected');
+        $("#results .active").removeClass('active');
+        $(`[data-sequence-n="${seq_n}"]`).addClass('active');
     });
 }
 
@@ -208,8 +226,8 @@ function fill_deltas_table(deltas) {
                 .append($("<td/>").html(x.commit_title))
                 .on('click', ev => {
                     selected_commit = x.commit_sha;
-                    $('.selected').removeClass('selected');
-                    $(ev.currentTarget).addClass('selected');
+                    $('#results .active').removeClass('active');
+                    $(ev.currentTarget).addClass('active');
                     Plotly.relayout(graph_div, { 'annotations': deltas_annots(deltas) });
                 })
                 .attr('data-commit', x.commit_sha)
@@ -245,10 +263,6 @@ $(document).ready(() => {
         $(`#${test}`).checked = true;
     }
 
-    $('#branch').on('change', function() {
-        const tests = Object.keys(test_points);
-        tests.map(add_test);
-    });
     $('#delta-threshold').on('change', update_all);
     $('#test-filter').on('keydown', update_test_filter);
 });
