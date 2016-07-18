@@ -80,14 +80,34 @@ $ i=0; while IFS= read -r tests; do echo $tests; ./plot.py -o $i.svg $tests; let
 
 To compute a comparison between two commits,
 ```
-SELECT new.test_env, new.test_name, array_agg(old.result_value), array_agg(new.result_value)
+SELECT test_envs.test_env_name, tests.test_name,
+       array_agg(old.result_value) as old,
+       array_agg(new.result_value) as new,
+       (avg(new.result_value) - avg(old.result_value)) / NULLIF(avg(old.result_value), 0) as change
 FROM (
-select * from results_view where commit_sha='ba46dd060f959e3c96a74c1546946c3f8bf84dd0'
+    SELECT *
+    FROM results
+    JOIN commits ON (commits.commit_id = results.commit_id)
+    WHERE commits.commit_sha ~ '567dbd9bcb603*'
 ) AS old, (
-    select * from results_view where commit_sha='ba46dd060f959e3c96a74c1546946c3f8bf84dd0'
+    SELECT * 
+    FROM results
+    JOIN commits ON (commits.commit_id = results.commit_id)
+    WHERE commits.commit_sha ~ 'ffe4660510a*'
 ) AS new
-WHERE old.test_env = new.test_env AND old.test_name = new.test_name
-GROUP BY (new.test_env, new.test_name)
+JOIN test_envs ON (test_envs.test_env_id = new.test_env_id)
+JOIN tests ON (tests.test_id = new.test_id)
+WHERE old.test_env_id = new.test_env_id
+  AND old.test_id = new.test_id
+GROUP BY (new.test_env_id, test_envs.test_env_name, tests.test_name, new.test_id);
+```
+or
+```
+SELECT *
+FROM deltas2
+WHERE commit_1 ~ '567dbd9bcb603*'
+  AND commit_2 ~ 'ffe4660510a*'
+  AND test_name ~ 'compile-alloc*';
 ```
 
 To get a summary of the largest changes in the `compile-allocs/*` tests,

@@ -108,3 +108,24 @@ CREATE VIEW branches_view AS
     JOIN branch_commits USING (branch_id)
     JOIN commits USING (commit_id)
     WHERE sequence_n = 0;
+
+CREATE VIEW deltas2 AS
+    SELECT   cx.commit_sha as commit_1
+           , cy.commit_sha as commit_2
+           , tests.test_name
+           , rx.result_value AS result_value_1
+           , ry.result_value AS result_value_2
+           , (ry.result_value - rx.result_value) AS delta
+           , (ry.result_value - rx.result_value) / NULLIF(rx.result_value, 0) AS rel_delta
+    FROM   results AS rx
+         , results AS ry
+         , test_envs
+         , tests
+         , commits AS cx
+         , commits AS cy
+    WHERE rx.commit_id = cx.commit_id
+      AND ry.commit_id = cy.commit_id
+      AND rx.test_env_id = ry.test_env_id
+      AND rx.test_id = ry.test_id
+      AND tests.test_id = rx.test_id
+      AND test_envs.test_env_id = rx.test_env_id
