@@ -76,6 +76,13 @@ importBranch conn repo branchName = do
         (Only branchName)
         :: IO [Only Int]
 
+    executeMany conn
+        [sql| INSERT INTO commits (commit_sha)
+              VALUES (?)
+              ON CONFLICT DO NOTHING
+            |]
+        (map Only commits)
+
     commitIds <- M.fromList <$> query conn
                                       [sql|
                                           SELECT commit_sha, commit_id
