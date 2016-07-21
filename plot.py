@@ -122,7 +122,7 @@ for (commit, date), ys in big_deltas.items():
                 arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0.2'))
 
 # Shrink current axis by a bit to make room for legend
-pl.subplots_adjust(bottom=0.7, right=0.65)
+#pl.subplots_adjust(bottom=0.7, right=0.65)
 
 # Reduce tick count
 loc = mdate.AutoDateLocator(interval_multiples=True, maxticks=8)
