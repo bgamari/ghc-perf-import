@@ -103,7 +103,7 @@ GROUP BY (new.test_env_id, test_envs.test_env_name, tests.test_name, new.test_id
 ```
 or
 ```
-SELECT *
+SELECT avg(rel_delta)
 FROM deltas2
 WHERE commit_1 ~ '567dbd9bcb603*'
   AND commit_2 ~ 'ffe4660510a*'
