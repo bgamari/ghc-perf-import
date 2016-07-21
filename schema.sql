@@ -128,4 +128,4 @@ CREATE VIEW deltas2 AS
       AND rx.test_env_id = ry.test_env_id
       AND rx.test_id = ry.test_id
       AND tests.test_id = rx.test_id
-      AND test_envs.test_env_id = rx.test_env_id
+      AND test_envs.test_env_id = rx.test_env_id;
