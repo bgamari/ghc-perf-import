@@ -123,13 +123,16 @@ function update_plots() {
     const axis_width = 0.05;
     const n_traces = Object.keys(test_points).length;
     let data = [];
+    //const xmin = entries(test_points).map(x => x[1].points[0].sequence_n).reduce(Math.min, 0);
     let layout = {
         yaxis: { title: "Benchmarked Value" }, // default when there are otherwise no traces
         xaxis: {
             showgrid: false,                  // remove the x-axis grid lines
             autorange: true,
             rangemode: 'normal',
-            domain: [axis_width*n_traces, 0.95]
+            // range: [xmin, Math.min(10, -0.05 * xmin)],
+            domain: [axis_width*n_traces, 0.95],
+            title: "Commits behind HEAD"
         },
         margin: {
             l: 70, b: 80, r: 10, t: 20
