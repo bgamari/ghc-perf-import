@@ -71,7 +71,11 @@ args =
       <*> fmap S.fromList (some $ argument str $ help "log files" <> metavar "FILE")
 
 getFileCommit :: FilePath -> Commit
-getFileCommit = dropExtensions . takeFileName
+getFileCommit path
+    -- abcd123.log/validate.xz
+  | takeFileName path == "validate.xz" = takeBaseName $ takeDirectory path
+    -- just plain abcd123.log
+  | otherwise = dropExtensions $ takeFileName path
 
 findMissingCommits :: Connection -> TestEnvName -> S.Set Commit -> IO (S.Set Commit)
 findMissingCommits conn testEnv commits =
