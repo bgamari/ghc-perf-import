@@ -62,6 +62,10 @@ div.tests ul li {
     list-style: none;
 }
 
+div.tests label {
+    font-weight: normal;
+}
+
 .improvement {color: darkgreen;}
 .regression {color: darkred;}
 

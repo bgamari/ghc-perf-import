@@ -20,6 +20,20 @@ function buildQueryString() {
     return params.toString();
 }
 
+function populate_test_envs() {
+    fetch(`${root_url}/test_envs`)
+        .then(resp => resp.json())
+        .then(resp => {
+            for (let x of resp) {
+                $('#test-env').append(
+                    $('<option>')
+                        .text(x.test_env_name)
+                        .attr('value', x.test_env_id)
+                );
+            }
+        });
+}
+
 function populate_branches() {
     const set_branch = (ev) => {
         $('#branch-selector .active').removeClass('active');
@@ -29,27 +43,26 @@ function populate_branches() {
         tests.map(add_test);
     };
     fetch(`${root_url}/branches_view`)
+        .then(resp => resp.json())
         .then(resp => {
-            return resp.json().then(resp => {
-                const sel = $("#branch-selector > div");
-                for (let branch of resp.sort((x, y) => new Date(y.commit_date) - new Date(x.commit_date))) {
-                    sel.append(
-                        $("<a/>")
-                            .attr('href', '#')
-                            .addClass('list-group-item')
-                            .attr('data-branch', branch.branch_name)
-                            .append($('<span/>')
-                                    .text(branch.branch_name)
-                                    .addClass('commit-name'))
-                            .append($('<time/>')
-                                    .addClass('badge')
-                                    .text(moment(branch.commit_date).fromNow())
-                                    .attr('datetime', branch.commit_date))
-                            .click(set_branch)
-                    );
-                }
-                $('#branch-selector a[data-branch=master]').addClass('active');
-            });
+            const sel = $("#branch-selector > div");
+            for (let branch of resp.sort((x, y) => new Date(y.commit_date) - new Date(x.commit_date))) {
+                sel.append(
+                    $("<a/>")
+                        .attr('href', '#')
+                        .addClass('list-group-item')
+                        .attr('data-branch', branch.branch_name)
+                        .append($('<span/>')
+                                .text(branch.branch_name)
+                                .addClass('commit-name'))
+                        .append($('<time/>')
+                                .addClass('badge')
+                                .text(moment(branch.commit_date).fromNow())
+                                .attr('datetime', branch.commit_date))
+                        .click(set_branch)
+                );
+            }
+            $('#branch-selector a[data-branch=master]').addClass('active');
         });
 }
 
@@ -96,7 +109,8 @@ function add_test(test) {
 
     const branch = $('#branch-selector .active').attr('data-branch');
     $("body").addClass('working');
-    fetch(`${root_url}/results_view?test_name=eq.${test}&branch_name=eq.${branch}&test_env=eq.nomeata&order=sequence_n&limit=${limit}`)
+    const test_env = $('#test-env')[0].value;
+    fetch(`${root_url}/results_view?test_name=eq.${test}&branch_name=eq.${branch}&test_env_id=eq.${test_env}&order=sequence_n&limit=${limit}`)
         .then(resp => {
             return resp.json().then(resp => {
                 console.log(`Have ${resp.length} points for ${test}`);
@@ -253,6 +267,7 @@ function update_test_filter() {
 
 $(document).ready(() => {
     graph_div = document.getElementById('plot');
+    populate_test_envs();
     populate_branches();
     populate_tests();
     Plotly.plot(graph_div, [], {});
