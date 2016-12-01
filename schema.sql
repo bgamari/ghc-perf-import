@@ -132,3 +132,26 @@ CREATE VIEW deltas2 AS
       AND rx.test_id = ry.test_id
       AND tests.test_id = rx.test_id
       AND test_envs.test_env_id = rx.test_env_id;
+
+
+-- Geometric mean
+CREATE TYPE geom_mean_accum AS (prod real, n integer);
+CREATE FUNCTION geom_mean_acc(s geom_mean_accum, v real)
+RETURNS geom_mean_accum
+AS $$ BEGIN
+    RETURN ((s).prod * v, (s).n + 1);
+END $$ LANGUAGE plpgsql;
+
+CREATE FUNCTION geom_mean_final(s geom_mean_accum)
+RETURNS real
+AS $$ BEGIN
+    RETURN (s).prod^(1.0 / (s).n);
+END $$ LANGUAGE plpgsql;
+
+CREATE AGGREGATE geom_mean(real)
+(
+    sfunc = geom_mean_acc,
+    stype = geom_mean_accum,
+    initcond = '(1,0)',
+    finalfunc = geom_mean_final
+);
