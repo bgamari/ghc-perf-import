@@ -27,11 +27,11 @@ CREATE TABLE tests
 CREATE INDEX ON tests (test_name);
 
 CREATE TABLE results
-    ( result_id serial PRIMARY KEY
-    , commit_id integer REFERENCES commits (commit_id)
+    ( commit_id integer REFERENCES commits (commit_id)
     , test_env_id integer REFERENCES test_envs (test_env_id)
     , test_id integer REFERENCES tests (test_id)
     , result_value float
+    , PRIMARY KEY (commit_id, test_env_id, test_id)
     );
 
 CREATE INDEX ON results (test_env_id, commit_id);

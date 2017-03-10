@@ -59,7 +59,8 @@ ingest conn commit testEnv tests = withTransaction conn $ do
                   ]
     executeMany conn
         [sql| INSERT INTO results (commit_id, test_env_id, test_id, result_value)
-              VALUES (?,?,?,?) |]
+              VALUES (?,?,?,?)
+              ON CONFLICT DO NOTHING |]
         results
 
 connInfo = defaultConnectInfo { connectDatabase = "ghc_perf", connectUser = "ben", connectPassword = "mudpie" }
