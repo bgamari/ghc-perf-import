@@ -1,6 +1,9 @@
 CREATE DATABASE ghc_perf;
 \c ghc_perf
 
+-- This improves query performance on results_view significantly
+ALTER DATABSE ghc_perf SET cpu_tuple_cost = 0.2;
+
 CREATE TABLE test_envs
     ( test_env_id serial PRIMARY KEY
     , test_env_name text UNIQUE
