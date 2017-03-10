@@ -2,7 +2,8 @@
 
 module SummarizeResults where
 
-import Slurp
+import qualified Slurp as Nofib
+import qualified TestsuiteResults
 import Data.List (isSuffixOf, intercalate)
 import qualified Data.Map as M
 import Control.Monad.Trans.Writer
@@ -16,8 +17,12 @@ sample k v = tell $ singleton (intercalate "/" k, realToFrac v)
 
 parseResults :: FilePath  -> IO [(String, Double)]
 parseResults path = do
-    res <- parse_log . BSL.unpack . decompress <$> BSL.readFile path
-    return $ toList $ execWriter $ traverse (uncurry buildResults) $ M.toList res
+    input <- decompress <$> BSL.readFile path
+    let nofibResults = toList $ execWriter
+                       $ traverse (uncurry buildNofibResults)
+                       $ M.toList $ Nofib.parse_log $ BSL.unpack input
+        testsuiteResults = TestsuiteResults.parseResults input
+    return $ nofibResults ++ testsuiteResults
   where
     decompress
       | ".xz" `isSuffixOf` path = Lzma.decompress
@@ -26,8 +31,8 @@ parseResults path = do
 -- | The name of a nofib test.
 type NofibTest = String
 
-buildResults :: NofibTest -> Results -> Writer (DList (String, Double)) ()
-buildResults testName (Results{..}) = do
+buildNofibResults :: NofibTest -> Nofib.Results -> Writer (DList (String, Double)) ()
+buildNofibResults testName (Nofib.Results{..}) = do
     forM_ (M.assocs compile_time)   $ \(k,v) -> sample ["compile-time", testName, k] v
     forM_ (M.assocs compile_allocs) $ \(k,v) -> sample ["compile-allocs", testName, k] v
     forM_ (M.assocs module_size)    $ \(k,v) -> sample ["module-size", testName, k] v

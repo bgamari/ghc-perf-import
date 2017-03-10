@@ -1,5 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 
+import Data.Semigroup ((<>))
 import Control.Exception
 import Data.Foldable
 import qualified Data.Map as M
