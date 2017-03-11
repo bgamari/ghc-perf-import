@@ -77,35 +77,52 @@ importBranch conn repo branchName = do
         (Only branchName)
         :: IO [Only Int]
 
-    executeMany conn
-        [sql| INSERT INTO commits (commit_sha)
-              VALUES (?)
-              ON CONFLICT DO NOTHING
-            |]
-        (map Only commits)
+    mHeadCommit <- query conn
+        [sql| SELECT commit_sha
+              FROM branch_commits, commits
+              WHERE branch_commits.branch_id = ?,
+                    branch_commits.sequence_n = 0,
+                    commits.commit_id = branch_commits.commit_id,
+                    commits.commit_id = branches.commit_id |]
+        (Only branchId)
+        :: IO [Only Commit]
 
-    commitIds <- M.fromList <$> query conn
-                                      [sql|
-                                          SELECT commit_sha, commit_id
-                                          FROM commits
-                                          WHERE commit_sha IN ?
-                                          |]
-                                      (Only $ In commits)
-              :: IO (M.Map Commit Int)
+    -- Check for change in head commit
+    case mHeadCommit of
+      [Only headCommit]
+        | realHead : _ <- commits
+        , headCommit == realHead -> return ()
 
-    execute conn [sql|
-                     DELETE FROM branch_commits
-                     WHERE branch_id = ?
-                     |]
-                 (Only branchId)
-    n <- executeMany conn
-                      [sql|
-                          INSERT INTO branch_commits (branch_id, commit_id, sequence_n)
-                          VALUES (?,?,?)
-                          |]
-                      [ (branchId, commitId, negate n)
-                      | (n, commit) <- zip [0::Int ..] commits
-                      , Just commitId <- pure $ M.lookup commit commitIds
-                      ]
-    putStrLn $ "Imported "++show n++" commits on branch "++show branchName
-    return ()
+      _ -> do
+        executeMany conn
+            [sql| INSERT INTO commits (commit_sha)
+                  VALUES (?)
+                  ON CONFLICT DO NOTHING
+                |]
+            (map Only commits)
+
+        commitIds <- M.fromList <$> query conn
+                                          [sql|
+                                              SELECT commit_sha, commit_id
+                                              FROM commits
+                                              WHERE commit_sha IN ?
+                                              |]
+                                          (Only $ In commits)
+                  :: IO (M.Map Commit Int)
+
+        execute conn [sql|
+                        DELETE FROM branch_commits
+                        WHERE branch_id = ?
+                        |]
+                    (Only branchId)
+        n <- executeMany conn
+                          [sql|
+                              INSERT INTO branch_commits (branch_id, commit_id, sequence_n)
+                              VALUES (?,?,?)
+                              |]
+                          [ (branchId, commitId, negate n)
+                          | (n, commit) <- zip [0::Int ..] commits
+                          , Just commitId <- pure $ M.lookup commit commitIds
+                          ]
+        putStrLn $ "Imported "++show n++" commits on branch "++show branchName
+        return ()
