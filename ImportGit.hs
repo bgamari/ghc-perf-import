@@ -81,11 +81,11 @@ importBranch conn repo branchName = do
 
     mHeadCommit <- query conn
         [sql| SELECT commit_sha
-              FROM branch_commits, commits
-              WHERE branch_commits.branch_id = ?,
-                    branch_commits.sequence_n = 0,
-                    commits.commit_id = branch_commits.commit_id,
-                    commits.commit_id = branches.commit_id |]
+              FROM branch_commits, commits, branches
+              WHERE branch_commits.branch_id = ?
+                AND branch_commits.sequence_n = 0
+                AND commits.commit_id = branch_commits.commit_id
+                AND branches.branch_id = branches.branch_id |]
         (Only branchId)
         :: IO [Only Commit]
 
