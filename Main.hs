@@ -5,6 +5,7 @@ import Data.Semigroup ((<>))
 import Database.PostgreSQL.Simple
 import Database.PostgreSQL.Simple.SqlQQ
 import Database.PostgreSQL.Simple.Types
+import qualified Data.ByteString.Char8 as BS
 import qualified Data.Map as M
 import qualified Data.Set as S
 import Data.Int
@@ -66,10 +67,11 @@ ingest conn commit testEnv tests = withTransaction conn $ do
 connInfo = defaultConnectInfo { connectDatabase = "ghc_perf", connectUser = "ben", connectPassword = "mudpie" }
 
 
-args :: Parser (TestEnvName, S.Set FilePath)
+args :: Parser (TestEnvName, String, S.Set FilePath)
 args =
-    (,)
+    (,,)
       <$> option str (short 'e' <> long "env" <> help "test environment name" <> metavar "ENV")
+      <*> option str (short 'c' <> long "conn-string" <> help "PostgreSQL connection string")
       <*> fmap S.fromList (some $ argument str $ help "log files" <> metavar "FILE")
 
 getFileCommit :: FilePath -> Commit
@@ -97,11 +99,11 @@ findMissingCommits conn testEnv commits =
 
 main :: IO ()
 main = do
-    (testEnv, files) <- execParser $ info (helper <*> args) mempty
+    (testEnv, connString, files) <- execParser $ info (helper <*> args) mempty
     let printExc :: String -> SomeException -> IO ()
         printExc fname exc = putStrLn $ fname++": "++show exc
 
-    conn <- connect connInfo
+    conn <- connectPostgreSQL $ BS.pack connString
     let commitFiles :: M.Map Commit FilePath
         commitFiles = foldMap (\fname -> M.singleton (getFileCommit fname) fname) files
     missing <- findMissingCommits conn testEnv (M.keysSet commitFiles)

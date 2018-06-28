@@ -2,6 +2,7 @@
 
 import Data.Semigroup ((<>))
 import Control.Exception
+import qualified Data.ByteString.Char8 as BS
 import Data.Foldable
 import qualified Data.Map as M
 import Database.PostgreSQL.Simple
@@ -16,18 +17,19 @@ connInfo = defaultConnectInfo { connectDatabase = "ghc_perf", connectUser = "ben
 
 type BranchName = String
 
-args :: Parser (FilePath, [BranchName])
+args :: Parser (FilePath, String, [BranchName])
 args =
-    (,)
+    (,,)
       <$> option str (short 'd' <> long "directory" <> help "GHC repository path")
+      <*> option str (short 'c' <> long "conn-string" <> help "PostgreSQL connection string")
       <*> branches
   where
     branches = some (argument str (metavar "REF" <> help "name of branch to import")) <|> pure ["master"]
 
 main :: IO ()
 main = do
-    (repoPath, branches) <- execParser $ info (helper <*> args) mempty
-    conn <- connect connInfo
+    (repoPath, connString, branches) <- execParser $ info (helper <*> args) mempty
+    conn <- connectPostgreSQL $ BS.pack connString
     importCommits conn repoPath
     mapM_ (importBranch conn repoPath) branches
 
