@@ -5,3 +5,7 @@ all : bundle.js
 bundle.js : ghc_perf.js
 	npm install
 	browserify $< -o $@ -t [ babelify --presets [ es2015 ] ]
+
+install : bundle.js
+	install -t ${DESTDIR} bundle.js index.html ghc_perf.css
+
