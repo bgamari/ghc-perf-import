@@ -16,9 +16,9 @@ executable perf-import
   main-is:             Main.hs
   other-modules:       SummarizeResults, Slurp, Types, TestsuiteResults
   other-extensions:    QuasiQuotes, RecordWildCards
-  build-depends:       base >=4.8 && <4.13,
-                       postgresql-simple >=0.5 && <0.6,
-                       containers >=0.5 && <0.6,
+  build-depends:       base >=4.8 && <4.14,
+                       postgresql-simple >=0.5 && <0.7,
+                       containers >=0.5 && <0.7,
                        dlist >=0.7 && <0.9,
                        regex-compat >= 0.95,
                        attoparsec,
