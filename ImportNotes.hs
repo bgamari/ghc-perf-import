@@ -43,13 +43,13 @@ type Way = String
 type Metric = String
 
 parseNotes :: T.Text -> [(TestEnvName, TestName, Way, Metric, Double)]
-parseNotes = mapMaybe (f . T.words) . T.lines
+parseNotes = mapMaybe (f . T.splitOn (T.pack "\t")) . T.lines
   where
     f [testEnv, testName, way, metric, value]
-      | ("", value') : _ <- read $ T.unpack value =
+      | (value', "") : _ <- reads $ T.unpack value =
         Just (T.unpack testEnv, T.unpack testName, T.unpack way, T.unpack metric, value')
-      | otherwise =
-        Nothing
+    f [t] | T.null t = Nothing
+    f xs = error $ "parse error: " <> show xs
 
 readNotes :: FilePath -> NotesRef -> Commit -> IO [(TestEnvName, TestName, Way, Metric, Double)]
 readNotes repo notesRef commit = do
@@ -67,7 +67,7 @@ importNotes conn repo notesRef = do
     ingestCommit commit = do
       notes <- readNotes repo notesRef commit 
       let testEnvs = M.unionsWith (<>) 
-            [ M.singleton testEnv (M.singleton (metric <> "/" <> testName) value)
+            [ M.singleton ("ci-"<>testEnv) (M.singleton (metric <> "/" <> testName) value)
             | (testEnv, testName, "normal", metric, value) <- notes
             ]
 
