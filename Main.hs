@@ -6,7 +6,7 @@ import Database.PostgreSQL.Simple
 import Database.PostgreSQL.Simple.SqlQQ
 import Database.PostgreSQL.Simple.Types
 import qualified Data.ByteString.Char8 as BS
-import qualified Data.Map as M
+import qualified Data.Map.Strict as M
 import qualified Data.Set as S
 import Data.Int
 import Control.Monad (void)
@@ -17,55 +17,9 @@ import System.FilePath
 import Control.Exception
 
 import Types
+import Utils
 import Slurp
 import SummarizeResults
-
-ingest :: Connection
-       -> Commit -> TestEnvName -> M.Map TestName Double -> IO Int64
-ingest conn commit testEnv tests = withTransaction conn $ do
-    executeMany conn
-        [sql| INSERT INTO tests (test_name)
-              VALUES (?)
-              ON CONFLICT (test_name) DO NOTHING|]
-        (map Only $ M.keys tests)
-
-    testIds <- M.fromList <$> query conn
-        [sql| SELECT test_name, test_id
-              FROM tests
-              WHERE test_name IN ? |]
-        (Only $ In $ M.keys tests)
-
-    execute conn
-        [sql| INSERT INTO commits (commit_sha)
-              VALUES (?)
-              ON CONFLICT DO NOTHING |]
-        (Only commit)
-
-    [Only commitId] <- query conn
-        [sql| SELECT commit_id
-              FROM commits
-              WHERE commit_sha = ? |]
-        (Only commit)
-
-    [Only testEnvId] <- query conn
-        [sql| SELECT test_env_id
-              FROM test_envs
-              WHERE test_env_name = ? |]
-        (Only testEnv)
-
-    let results :: [(Int, Int, Int, Double)]
-        results = [ (commitId, testEnvId, testId, realToFrac value)
-                  | (testName, value) <- M.toList tests
-                  , Just testId <- pure $ M.lookup testName testIds
-                  ]
-    executeMany conn
-        [sql| INSERT INTO results (commit_id, test_env_id, test_id, result_value)
-              VALUES (?,?,?,?)
-              ON CONFLICT DO NOTHING |]
-        results
-
-connInfo = defaultConnectInfo { connectDatabase = "ghc_perf", connectUser = "ben", connectPassword = "mudpie" }
-
 
 args :: Parser (TestEnvName, String, S.Set FilePath)
 args =
@@ -115,6 +69,6 @@ main = do
         let commit = getFileCommit fname
         results <- M.fromList <$> parseResults fname
         putStrLn $ commit++": "++show (M.size results)++" results"
-        void $ ingest conn commit testEnv results
+        void $ addMetrics conn commit testEnv results
 
     close conn
