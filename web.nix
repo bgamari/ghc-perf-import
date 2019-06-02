@@ -13,7 +13,7 @@ in
       browserify ghc_perf.js -o bundle.js
     '';
     installPhase = ''
-      mkdir $out
-      make install DESTDIR=$out
+      mkdir -p $out
+      install -t $out bundle.js index.html ghc_perf.css spinner.css
     '';
   }
