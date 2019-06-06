@@ -9,9 +9,9 @@ let
   result = import (pkgs.fetchFromGitHub {
     owner = "dmjio";
     repo = "miso";
-    sha256 = "1wvdizaq81a50jd121qlk47hnix0q0r1pnq2jqkwyy5ssfq6hpb6";
-    rev = "8b5249b966f1406badbada3feebcfbbeab8afa87";
+    sha256 = "0hmhghnq3hhc6dh530i3mlrz375vfvb9aswvccpr7kbinj8vy6aa";
+    rev = "18de471f5ac16e67803a31f72a3028d87df2f0b7";
   }) {};
-in pkgs.haskell.packages.ghcjs.callPackage ./app.nix {
+in pkgs.haskell.packages.ghcjsHEAD.callPackage ./app.nix {
   miso = result.miso-ghcjs;
 }
