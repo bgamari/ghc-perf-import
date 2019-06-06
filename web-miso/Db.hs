@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Db where
 
@@ -18,7 +19,7 @@ newtype BranchName = BranchName { getBranchName :: MisoString }
 newtype CommitSha = CommitSha { getCommitSha :: MisoString }
                   deriving (Eq, Ord, Show, FromJSON, ToJSON)
 
-data Result = Result { testName :: !TestName 
+data Result = Result { testName :: !TestName
                      , resultValue :: !Double
                      }
             deriving (Eq, Ord, Show)
@@ -29,16 +30,22 @@ instance FromJSON Result where
            <*> o .: "result_value"
 
 getCommitResults :: CommitSha -> TestEnv -> IO [Result]
-getCommitResults sha testEnv = do
+getCommitResults sha testEnv = fetchJson url
+  where
+    url = pack "http://home.smart-cactus.org:8889/results_view?commit_sha=eq." <> getCommitSha sha <> "&test_env_id=eq." <> ms (show $ getTestEnv testEnv) <> "&limit=100"
+
+fetchJson :: forall a. FromJSON a => JSString -> IO a
+fetchJson url = do
     Just resp <- contents <$> xhrByteString req
-    case eitherDecodeStrict resp :: Either String [Result] of
-      Left s -> error s
+    case eitherDecodeStrict resp :: Either String a of
+      Left s -> fail s
       Right j -> pure j
   where
     req = Request { reqMethod = GET
-                  , reqURI = pack "http://home.smart-cactus.org:8889/results_view?commit_sha=eq." <> getCommitSha sha <> "&test_env_id=eq." <> ms (show $ getTestEnv testEnv) <> "&limit=100"
+                  , reqURI = url
                   , reqLogin = Nothing
                   , reqHeaders = []
                   , reqWithCredentials = False
                   , reqData = NoData
                   }
+
