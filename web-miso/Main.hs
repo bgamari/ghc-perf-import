@@ -138,30 +138,6 @@ updateModel' NoOp = return ()
 updateModel :: Action -> Model -> Effect Action Model
 updateModel action = fromTransition (updateModel' action)
 
-{-
-updateModel FetchTestEnvs m = m <# do
-  SetTestEnvs <$> getTestEnvs
-updateModel (SetTestEnvs xs) m =
-  noEff m { testEnvs = xs }
-updateModel (SetActiveTestEnv xs) m = m <# return FetchResults
-updateModel (SetCommit1 commit) m = 
-  let Pair _ x = results m
-  in m { results = Pair (Just (commit, mempty)) x } <# return FetchResults
-updateModel (SetCommit2 commit) m = 
-  let Pair x _ = results m
-  in m { results = Pair x (Just (commit, mempty)) } <# return FetchResults
-updateModel (Commit1CompleterAction action) = do
-  (commit, _) <- Comp.handleCompletionAction action
-  scheduleIO $ return $ SetCommit1 commit
-updateModel FetchResults m = m <#
-  let f (commit, _) = do x <- getCommitResults' (activeTestEnv m) commit
-                         return (commit, x)
-  in SetResults <$> traverse (traverse f) (results m)
-updateModel (SetResults results') m =
-  noEff m { results = results' }
-updateModel NoOp m = noEff m
--}
-
 -- | View function, with routing
 viewModel :: Model -> View Action
 viewModel Model{..} = view
@@ -179,8 +155,14 @@ viewModel Model{..} = view
         | (env, name) <- M.toList _testEnvs
         ]
 
-      , fmap (CommitCompleterAction Commit1) $ Comp.render commitCompleter (_commitCompleters ^. _1)
-      , fmap (CommitCompleterAction Commit2) $ Comp.render commitCompleter (_commitCompleters ^. _2)
+      , label_ []
+          [ text "commit 1"
+          , fmap (CommitCompleterAction Commit1) $ Comp.render commitCompleter (_commitCompleters ^. _1)
+          ]
+      , label_ []
+          [ text "commit 2"
+          , fmap (CommitCompleterAction Commit2) $ Comp.render commitCompleter (_commitCompleters ^. _2)
+          ]
 
       , case _results of
           Pair (Just (commit1, results1)) (Just (commit2, results2)) ->

@@ -96,3 +96,4 @@ fetchCommitsWithPrefix :: MisoString -> IO [Commit]
 fetchCommitsWithPrefix prefix = fetchJson url
   where
     url = rootUrl <> "/commits?commit_sha=like." <> prefix <> "*"
+

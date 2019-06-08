@@ -13,7 +13,6 @@ module Completer
   ) where
 
 import Data.Maybe
-import Debug.Trace
 import Control.Monad
 import Control.Monad.Trans.State.Strict
 
@@ -56,7 +55,7 @@ data Action a
 
 newCompleter :: forall a. Show a => Config a -> Completer a
 newCompleter Config{..} = 
-    Completer { handleCompletionAction = handle . (\x -> traceShow x x)
+    Completer { handleCompletionAction = handle
               , initialModel           = Inactive
               , render                 = render
               }

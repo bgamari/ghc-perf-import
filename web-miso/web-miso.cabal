@@ -9,5 +9,5 @@ executable app
   main-is:             Main.hs
   other-modules:       Db
   build-depends:       base, ghcjs-base, containers, miso, aeson, lens, transformers
-  ghc-optinos:         -Wall
+  ghc-options:         -Wall
   default-language:    Haskell2010
