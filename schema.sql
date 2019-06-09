@@ -137,6 +137,25 @@ CREATE VIEW deltas2 AS
       AND tests.test_id = rx.test_id
       AND test_envs.test_env_id = rx.test_env_id;
 
+CREATE VIEW commit_metric_counts AS
+    SELECT   results.test_env_id
+           , test_envs.test_env_name
+           , commits.commit_sha
+           , commits.commit_date
+           , commits.commit_title
+           , count(results.test_id) as result_count
+    FROM   results
+         , test_envs
+         , tests
+         , commits
+    WHERE results.commit_id = commits.commit_id
+      AND tests.test_id = results.test_id
+      AND test_envs.test_env_id = results.test_env_id
+    GROUP BY   results.test_env_id
+             , test_envs.test_env_name
+             , commits.commit_sha
+             , commits.commit_date
+             , commits.commit_title;
 
 -- Geometric mean
 CREATE TYPE geom_mean_accum AS (prod real, n integer);

@@ -12,23 +12,21 @@ module Completer
   , newCompleter
   ) where
 
-import Data.Maybe
-import Control.Monad
 import Control.Monad.Trans.State.Strict
 
 import Miso
 import Miso.String (MisoString, ToMisoString(..))
 
-data Config a
-  = Config { fetchCompletions    :: MisoString -> IO [a]
+data Config env a
+  = Config { fetchCompletions    :: env -> MisoString -> IO [a]
            , renderCompletion    :: a -> [View (Action a)]
            , toText              :: a -> MisoString
            , minCompletionLength :: Int
            , placeholderText     :: MisoString
            }
 
-data Completer a
-  = Completer { handleCompletionAction :: Action a -> Transition (Action a) (Model a) (Maybe a)
+data Completer env a
+  = Completer { handleCompletionAction :: env -> Action a -> Transition (Action a) (Model a) (Maybe a)
               , initialModel           :: Model a
               , render                 :: Model a -> View (Action a)
               }
@@ -53,38 +51,38 @@ data Action a
   | Noop
   deriving (Eq, Show)
 
-newCompleter :: forall a. Show a => Config a -> Completer a
+newCompleter :: forall env a. Show a => Config env a -> Completer env a
 newCompleter Config{..} = 
     Completer { handleCompletionAction = handle
               , initialModel           = Inactive
               , render                 = render
               }
   where
-    handle :: Action a -> Transition (Action a) (Model a) (Maybe a)
-    handle (SetCompletionText t)
+    handle :: env -> Action a -> Transition (Action a) (Model a) (Maybe a)
+    handle m (SetCompletionText t)
       | length (fromMisoString t :: String) >= minCompletionLength = do
           put Loading
-          scheduleIO $ fmap SetCompletions $ fetchCompletions t
+          scheduleIO $ fmap SetCompletions $ fetchCompletions m t
           return Nothing
       | otherwise = do
           put Inactive
           return Nothing
-    handle (SetCompletions xs) = do
+    handle _ (SetCompletions xs) = do
       put $ Completing { currentCompletion = Nothing 
                        , completions = xs
                        , nCompletions = length xs
                        }
       return Nothing
-    handle (AcceptCompletion x) = do
+    handle _ (AcceptCompletion x) = do
       put $ Selected x
       return $ Just x
-    handle FocusInput = do
+    handle _ FocusInput = do
       get >>= \case Completing{..} -> put $ Completing { currentCompletion = Nothing, .. }
                     _              -> put Inactive
       return Nothing
-    handle MoveUp   = mapCurrent pred
-    handle MoveDown = mapCurrent succ
-    handle Noop = return Nothing
+    handle _ MoveUp   = mapCurrent pred
+    handle _ MoveDown = mapCurrent succ
+    handle _ Noop = return Nothing
 
     mapCurrent :: Monad m => (Int -> Int) -> StateT (Model a) m (Maybe a)
     mapCurrent f = do

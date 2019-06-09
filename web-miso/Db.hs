@@ -20,7 +20,6 @@ module Db
 
 import qualified Data.Map                      as M
 import           Data.Aeson hiding (Result)
-import           Data.Aeson.Types hiding (Result)
 
 import           JavaScript.Web.XMLHttpRequest
 import           Miso.String
@@ -83,6 +82,7 @@ instance FromJSON TestEnvRow where
 data Commit = Commit { commitSha   :: CommitSha
                      , commitTitle :: JSString
                      , commitDate  :: JSString
+                     , commitResultsCount :: Int
                      }
             deriving (Eq, Show)
 
@@ -91,9 +91,12 @@ instance FromJSON Commit where
     Commit <$> o .: "commit_sha"
            <*> o .: "commit_title"
            <*> o .: "commit_date"
+           <*> o .: "result_count"
 
-fetchCommitsWithPrefix :: MisoString -> IO [Commit]
-fetchCommitsWithPrefix prefix = fetchJson url
+fetchCommitsWithPrefix :: TestEnv -> MisoString -> IO [Commit]
+fetchCommitsWithPrefix env prefix = fetchJson url
   where
-    url = rootUrl <> "/commits?commit_sha=like." <> prefix <> "*"
+    url = rootUrl <> "/commit_metric_counts"
+        <> "?test_env_id=eq." <> ms (show $ getTestEnv env) <> "&" 
+        <> "commit_sha=like." <> prefix <> "*"
 

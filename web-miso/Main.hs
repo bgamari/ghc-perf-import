@@ -87,15 +87,16 @@ main = do
     subs   = []
     view   = viewModel
 
-commitCompleter :: Comp.Completer Commit
+commitCompleter :: Comp.Completer TestEnv Commit
 commitCompleter = 
   Comp.newCompleter 
   $ Comp.Config { fetchCompletions = fetchCommitsWithPrefix
                 , renderCompletion = \Commit{..} ->
-                    [ span_ [class_ "commit"] [text $ getCommitSha commitSha]
+                    [ span_ [class_ "result-count"] [text $ ms $ show commitResultsCount]
+                    , span_ [class_ "commit"] [text $ getCommitSha commitSha]
                     , span_ [class_ "summary"] [text commitTitle]
                     ]
-                , minCompletionLength = 3
+                , minCompletionLength = 2
                 , placeholderText  = "commit SHA"
                 , toText           = getCommitSha . commitSha
                 }
@@ -109,15 +110,21 @@ getCommitResults' testEnv commit = do
 
 fetchResults :: Which -> Transition Action Model ()
 fetchResults which = do
-  Just (commit, _) <- use $ results . select which
-  env <- use activeTestEnv
-  scheduleIO $ SetResults which <$> getCommitResults' env commit
+  mbResults <- use $ results . select which
+  case mbResults of
+    Just (commit, _)  -> do
+      env <- use activeTestEnv
+      scheduleIO $ SetResults which <$> getCommitResults' env commit
+    Nothing -> return ()
 
 updateModel' :: Action -> Transition Action Model ()
 updateModel' FetchTestEnvs = do
   scheduleIO $ fmap SetTestEnvs getTestEnvs
 updateModel' (SetTestEnvs xs) = do
   testEnvs .= xs
+  case M.keys xs of
+    x:_ -> activeTestEnv .= x
+    []  -> return ()
 updateModel' (SetActiveTestEnv env) = do
   activeTestEnv .= env
   fetchResults Commit1
@@ -127,11 +134,14 @@ updateModel' (SetCommit which commit) = do
   fetchResults which
 updateModel' (SetResults which rs) = do
   results . select which . _Just . _2 .= rs
-updateModel' (CommitCompleterAction which action) = zoom (commitCompleters . select which) $ do
-  mcommit <- mapAction (CommitCompleterAction which) $ Comp.handleCompletionAction commitCompleter action
-  case mcommit of
-    Nothing -> return ()
-    Just commit -> scheduleIO $ return $ SetCommit which (commitSha commit)
+updateModel' (CommitCompleterAction which action) = do
+  testEnv <- use activeTestEnv
+  zoom (commitCompleters . select which) $ do
+    mcommit <- mapAction (CommitCompleterAction which) 
+               $ Comp.handleCompletionAction commitCompleter testEnv action
+    case mcommit of
+      Nothing -> return ()
+      Just commit -> scheduleIO $ return $ SetCommit which (commitSha commit)
 updateModel' NoOp = return ()
 
 -- | Update your model
@@ -149,10 +159,12 @@ viewModel Model{..} = view
                 ]
       [ h1_ [class_ $ pack "title" ] [ text $ pack "GHC Performance Statistics Comparison" ]
 
-      , select_
-        [ onChange (SetActiveTestEnv . read . unpack) ]
-        [ option_ [ value_ $ ms $ show env ] [ text name ]
-        | (env, name) <- M.toList _testEnvs
+      , div_ []
+        [ select_
+          [ onChange (SetActiveTestEnv . read . unpack) ]
+          [ option_ [ value_ $ ms $ show env ] [ text name ]
+          | (env, name) <- M.toList _testEnvs
+          ]
         ]
 
       , label_ []

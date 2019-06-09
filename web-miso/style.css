@@ -11,3 +11,20 @@
 .completer ul li.active {
   background-color: #222;
 }
+
+.completer .commit {
+  margin-right: 2em;
+  color: firebrick;
+  font-family: courier;
+}
+
+.completer .summary {
+
+}
+
+.completer .result-count {
+  background-color: #ddd;
+  margin: 0.5em;
+  padding: 0 0.2em;
+  border-radius: 0.5em;
+}

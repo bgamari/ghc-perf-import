@@ -23,6 +23,7 @@ let
     mkdir -p $out
     cp ${app}/bin/app.jsexe/all.js $out
     cp ${./index.html} $out/index.html
+    cp ${./style.css} $out/style.css
   '';
 
 in final
