@@ -49,7 +49,7 @@ data Model
   = Model
   { _testEnvs :: M.Map TestEnv MisoString
   , _activeTestEnv :: TestEnv
-  , _results :: Pair (Maybe (CommitSha, M.Map TestName Double))
+  , _results :: Pair (Maybe (Commit, M.Map TestName Double))
   , _commitCompleters :: Pair (Comp.Model Commit)
   } deriving (Eq, Show)
 
@@ -61,7 +61,7 @@ data Action
   | SetTestEnvs (M.Map TestEnv MisoString)
   | SetActiveTestEnv TestEnv
   | CommitCompleterAction Which (Comp.Action Commit)
-  | SetCommit Which CommitSha
+  | SetCommit Which Commit
   | SetResults Which (M.Map TestName Double)
   | NoOp
   deriving (Show, Eq)
@@ -114,7 +114,7 @@ fetchResults which = do
   case mbResults of
     Just (commit, _)  -> do
       env <- use activeTestEnv
-      scheduleIO $ SetResults which <$> getCommitResults' env commit
+      scheduleIO $ SetResults which <$> getCommitResults' env (commitSha commit)
     Nothing -> return ()
 
 updateModel' :: Action -> Transition Action Model ()
@@ -141,7 +141,7 @@ updateModel' (CommitCompleterAction which action) = do
                $ Comp.handleCompletionAction commitCompleter testEnv action
     case mcommit of
       Nothing -> return ()
-      Just commit -> scheduleIO $ return $ SetCommit which (commitSha commit)
+      Just commit -> scheduleIO $ return $ SetCommit which commit
 updateModel' NoOp = return ()
 
 -- | Update your model
@@ -182,8 +182,8 @@ viewModel Model{..} = view
             [ thead_ [] [
                 tr_ []
                 [ th_ [] [ text $ pack "test name" ]
-                , th_ [] [ text $ getCommitSha commit1 ]
-                , th_ [] [ text $ getCommitSha commit2 ]
+                , th_ [] [ text $ getCommitSha $ commitSha commit1 ]
+                , th_ [] [ text $ getCommitSha $ commitSha commit2 ]
                 , th_ [] [ text $ pack "relative change" ]
                 ]
               ]
