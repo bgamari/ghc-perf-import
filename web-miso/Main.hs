@@ -25,7 +25,7 @@ import           Data.JSString.RealFloat
 
 import           Miso hiding (defaultOptions, Result)
 import           Miso.Types (mapAction)
-import           Miso.String
+import           Miso.String (MisoString, pack, unpack, ms, (<>))
 
 import           Db
 import qualified Completer as Comp
@@ -171,10 +171,13 @@ viewModel Model{..} = view
           [ text "commit 1"
           , fmap (CommitCompleterAction Commit1) $ Comp.render commitCompleter (_commitCompleters ^. _1)
           ]
+      , renderCommit (_results ^? _1 . each . _1)
+
       , label_ []
           [ text "commit 2"
           , fmap (CommitCompleterAction Commit2) $ Comp.render commitCompleter (_commitCompleters ^. _2)
           ]
+      , renderCommit (_results ^? _2 . each . _1)
 
       , case _results of
           Pair (Just (commit1, results1)) (Just (commit2, results2)) ->
@@ -191,7 +194,12 @@ viewModel Model{..} = view
               [ tr_ [] [ td_ [] [ span_ [class_ "testname"] [text $ getTestName testName] ]
                        , td_ [] [ text $ formatDouble Fixed (Just 3) value1 ]
                        , td_ [] [ text $ formatDouble Fixed (Just 3) value2 ]
-                       , td_ [] [ text $ formatDouble Fixed (Just 1) (100 * (value2 - value1) / value1) <> "%" ]
+                       , let cls
+                               | delta >  0.01 = "increase"
+                               | delta < -0.01 = "decrease"
+                               | otherwise     = ""
+                             delta = 100 * (value2 - value1) / value1
+                         in td_ [class_ cls] [ text $ formatDouble Fixed (Just 1) delta <> "%" ]
                        ]
               | (testName, (value1, value2)) <- M.toList $ M.intersectionWith (,) results1 results2
               ]
@@ -200,3 +208,12 @@ viewModel Model{..} = view
 
       ]
     fmt = formatDouble Fixed (Just 2)
+      
+    renderCommit (Just commit) =
+      span_ []
+      [ div_ [] [text $ getCommitSha $ commitSha commit]
+      , div_ [] [text $ commitDate commit]
+      , div_ [] [text $ commitTitle commit]
+      ]
+    renderCommit Nothing = span_ [] []
+          

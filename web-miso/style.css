@@ -28,3 +28,11 @@
   padding: 0 0.2em;
   border-radius: 0.5em;
 }
+
+.increase {
+  color: darkred;
+}
+
+.decrease {
+  color: darkgreen;
+}
