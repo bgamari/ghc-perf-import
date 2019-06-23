@@ -179,7 +179,7 @@ function update_plots() {
     layout.annotations = deltas_annots(deltas);
 
     Plotly.purge(graph_div);
-    Plotly.newPlot(graph_div, data, layout);
+    Plotly.newPlot(graph_div, data, layout, {responsive: true});
     graph_div.on('plotly_hover', function (ev) {
         const seq_n = ev.xvals[ev.points[0].pointNumber];
         const commit = test_points;

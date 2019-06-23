@@ -6,14 +6,14 @@ ALTER DATABASE ghc_perf SET cpu_tuple_cost = 0.2;
 
 CREATE TABLE test_envs
     ( test_env_id serial PRIMARY KEY
-    , test_env_name text UNIQUE
+    , test_env_name text UNIQUE NOT NULL
     );
 
 CREATE TABLE commits
     ( commit_id serial PRIMARY KEY
-    , commit_sha text UNIQUE
-    , commit_date timestamp with time zone
-    , commit_title text
+    , commit_sha text UNIQUE NOT NULL
+    , commit_date timestamp with time zone NOT NULL
+    , commit_title TEXT NOT NULL
     );
 
 CREATE INDEX ON commits (commit_date);
@@ -30,7 +30,7 @@ CREATE TABLE results
     ( commit_id integer REFERENCES commits (commit_id)
     , test_env_id integer REFERENCES test_envs (test_env_id)
     , test_id integer REFERENCES tests (test_id)
-    , result_value float
+    , result_value float NOT NULL
     , PRIMARY KEY (commit_id, test_env_id, test_id)
     );
 
@@ -39,7 +39,7 @@ CREATE INDEX ON results (test_env_id, test_id);
 
 CREATE TABLE branches
     ( branch_id serial PRIMARY KEY
-    , branch_name text UNIQUE
+    , branch_name text UNIQUE NOT NULL
     );
 CREATE INDEX ON branches (branch_name);
 
@@ -137,6 +137,25 @@ CREATE VIEW deltas2 AS
       AND tests.test_id = rx.test_id
       AND test_envs.test_env_id = rx.test_env_id;
 
+CREATE VIEW commit_metric_counts AS
+    SELECT   results.test_env_id
+           , test_envs.test_env_name
+           , commits.commit_sha
+           , commits.commit_date
+           , commits.commit_title
+           , count(results.test_id) as result_count
+    FROM   results
+         , test_envs
+         , tests
+         , commits
+    WHERE results.commit_id = commits.commit_id
+      AND tests.test_id = results.test_id
+      AND test_envs.test_env_id = results.test_env_id
+    GROUP BY   results.test_env_id
+             , test_envs.test_env_name
+             , commits.commit_sha
+             , commits.commit_date
+             , commits.commit_title;
 
 -- Geometric mean
 CREATE TYPE geom_mean_accum AS (prod real, n integer);
