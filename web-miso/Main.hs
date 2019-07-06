@@ -15,6 +15,7 @@
 module Main where
 
 import           Control.Lens
+import           Data.List
 import           Data.Aeson hiding (Result, (.=))
 import           Data.Aeson.Types hiding (Result, Pair, (.=))
 import qualified Data.Map                      as M
@@ -94,7 +95,7 @@ commitCompleter =
                 , renderCompletion = \Commit{..} ->
                     [ span_ [class_ "result-count"] [text $ ms $ show commitResultsCount]
                     , span_ [class_ "commit"] [text $ getCommitSha commitSha]
-                    , span_ [class_ "summary"] [text commitTitle]
+                    , span_ [class_ "summary"] [text $ fromMaybe "commit title unavailable" commitTitle]
                     ]
                 , minCompletionLength = 2
                 , placeholderText  = "commit SHA"
@@ -148,6 +149,9 @@ updateModel' NoOp = return ()
 updateModel :: Action -> Model -> Effect Action Model
 updateModel action = fromTransition (updateModel' action)
 
+relChange :: Double -> Double -> Double
+relChange x y = (y - x) / x
+
 -- | View function, with routing
 viewModel :: Model -> View Action
 viewModel Model{..} = view
@@ -195,13 +199,14 @@ viewModel Model{..} = view
                        , td_ [] [ text $ formatDouble Fixed (Just 3) value1 ]
                        , td_ [] [ text $ formatDouble Fixed (Just 3) value2 ]
                        , let cls
-                               | delta >  0.01 = "increase"
-                               | delta < -0.01 = "decrease"
+                               | pctChange >  0.1 = "increase"
+                               | pctChange < -0.1 = "decrease"
                                | otherwise     = ""
-                             delta = 100 * (value2 - value1) / value1
-                         in td_ [class_ cls] [ text $ formatDouble Fixed (Just 1) delta <> "%" ]
+                             delta = relChange value1 value2 * 100
+                         in td_ [class_ cls] [ text $ formatDouble Fixed (Just 1) pctChange <> "%" ]
                        ]
-              | (testName, (value1, value2)) <- M.toList $ M.intersectionWith (,) results1 results2
+              | (testName, delta, (value1, value2)) <- sortedDeltas results1 results2
+              , let pctChange = 100 * delta
               ]
             ]
           _ -> div_ [] [ text $ pack "Enter two commits above" ]
@@ -212,8 +217,14 @@ viewModel Model{..} = view
     renderCommit (Just commit) =
       span_ []
       [ div_ [] [text $ getCommitSha $ commitSha commit]
-      , div_ [] [text $ commitDate commit]
-      , div_ [] [text $ commitTitle commit]
+      , div_ [] [text $ fromMaybe "the past" $ commitDate commit]
+      , div_ [] [text $ fromMaybe "commit title unavailable" $ commitTitle commit]
       ]
     renderCommit Nothing = span_ [] []
-          
+
+sortedDeltas :: Ord a => M.Map a Double -> M.Map a Double -> [(a, Double, (Double, Double))]
+sortedDeltas xs ys =
+    sortOn (\(_,rel,_) -> rel)
+    [ (k, relChange v1 v2, (v1, v2))
+    | (k, (v1, v2)) <- M.toList $ M.intersectionWith (,) xs ys
+    ]
