@@ -12,8 +12,8 @@ CREATE TABLE test_envs
 CREATE TABLE commits
     ( commit_id serial PRIMARY KEY
     , commit_sha text UNIQUE NOT NULL
-    , commit_date timestamp with time zone NOT NULL
-    , commit_title TEXT NOT NULL
+    , commit_date timestamp with time zone
+    , commit_title TEXT
     );
 
 CREATE INDEX ON commits (commit_date);

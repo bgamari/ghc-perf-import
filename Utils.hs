@@ -11,6 +11,16 @@ import Types
 
 defaultConnInfo = defaultConnectInfo { connectDatabase = "ghc_perf", connectUser = "ben", connectPassword = "mudpie" }
 
+ensureTestEnvExists :: Connection -> TestEnvName -> IO ()
+ensureTestEnvExists conn testEnv = do
+    execute conn
+        [sql| INSERT INTO test_envs (test_env_name)
+              VALUES (?)
+              ON CONFLICT DO NOTHING
+            |]
+        (Only testEnv)
+    return ()
+
 addMetrics :: Connection
            -> Commit -> TestEnvName -> M.Map TestName Double -> IO Int64
 addMetrics conn commit testEnv tests = withTransaction conn $ do

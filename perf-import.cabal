@@ -53,3 +53,20 @@ executable perf-import-notes
                        text,
                        optparse-applicative >= 0.12,
                        process >= 1.4
+
+executable perf-import-head-hackage
+  main-is:             ImportHeadHackage.hs
+  other-modules:       Types, Utils, MRX
+  default-language:    Haskell2010
+  build-depends:       base,
+                       bytestring,
+                       filepath,
+                       postgresql-simple,
+                       containers,
+                       text,
+                       lens,
+                       lens-regex-pcre,
+                       pcre-light,
+                       template-haskell,
+                       optparse-applicative >= 0.12,
+                       process >= 1.4
