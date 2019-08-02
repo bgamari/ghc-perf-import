@@ -1,4 +1,4 @@
-module Types where
+module GhcPerf.Import.Types where
 
 -- TODO: Perhaps less hackery
 type Commit = String

@@ -10,7 +10,7 @@ import Database.PostgreSQL.Simple.SqlQQ
 import Data.Time.Format
 import Data.Time.Clock
 import System.Process
-import Types
+import GhcPerf.Import.Types
 import Options.Applicative
 
 connInfo = defaultConnectInfo { connectDatabase = "ghc_perf", connectUser = "ben", connectPassword = "mudpie" }

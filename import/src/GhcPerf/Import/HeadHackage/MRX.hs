@@ -1,4 +1,4 @@
-module MRX (mrx) where
+module GhcPerf.Import.HeadHackage.MRX (mrx) where
 
 import Text.Regex.PCRE.Light
 import Language.Haskell.TH.Quote

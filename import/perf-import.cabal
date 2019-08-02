@@ -12,9 +12,29 @@ build-type:          Simple
 extra-source-files:  ChangeLog.md
 cabal-version:       >=1.10
 
+library
+  exposed-modules:     GhcPerf.Import.HeadHackage
+                       GhcPerf.Import.Notes
+                       GhcPerf.Import.Types
+                       GhcPerf.Import.Utils
+  other-modules:       GhcPerf.Import.HeadHackage.MRX
+  hs-source-dirs:      src
+  build-depends:       base,
+                       bytestring,
+                       postgresql-simple,
+                       containers,
+                       text,
+                       filepath,
+                       lens,
+                       lens-regex-pcre,
+                       pcre-light,
+                       template-haskell,
+                       process,
+                       time >= 1.6
+
 executable perf-import-nofib
   main-is:             ImportNofib.hs
-  other-modules:       SummarizeResults, Slurp, Types, TestsuiteResults, Utils
+  other-modules:       SummarizeResults, Slurp, TestsuiteResults
   other-extensions:    QuasiQuotes, RecordWildCards
   build-depends:       base >=4.8 && <4.14,
                        postgresql-simple >=0.5 && <0.7,
@@ -26,13 +46,13 @@ executable perf-import-nofib
                        optparse-applicative >= 0.12,
                        bytestring,
                        lzma,
-                       transformers >=0.5 && <0.6
+                       transformers >=0.5 && <0.6,
+                       perf-import
   hs-source-dirs:      ., nofib/nofib-analyse
   default-language:    Haskell2010
 
 executable perf-import-git
   main-is:             ImportGit.hs
-  other-modules:       Types
   default-language:    Haskell2010
   build-depends:       base,
                        bytestring,
@@ -40,11 +60,11 @@ executable perf-import-git
                        containers,
                        time >= 1.6,
                        optparse-applicative >= 0.12,
-                       process >= 1.4
+                       process >= 1.4,
+                       perf-import
 
 executable perf-import-notes
   main-is:             ImportNotes.hs
-  other-modules:       Types, Utils
   default-language:    Haskell2010
   build-depends:       base,
                        bytestring,
@@ -52,11 +72,11 @@ executable perf-import-notes
                        containers,
                        text,
                        optparse-applicative >= 0.12,
-                       process >= 1.4
+                       process >= 1.4,
+                       perf-import
 
 executable perf-import-head-hackage
   main-is:             ImportHeadHackage.hs
-  other-modules:       Types, Utils, MRX
   default-language:    Haskell2010
   build-depends:       base,
                        bytestring,
@@ -69,4 +89,5 @@ executable perf-import-head-hackage
                        pcre-light,
                        template-haskell,
                        optparse-applicative >= 0.12,
-                       process >= 1.4
+                       process >= 1.4,
+                       perf-import

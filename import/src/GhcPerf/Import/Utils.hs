@@ -1,13 +1,13 @@
 {-# LANGUAGE QuasiQuotes #-}
 
-module Utils where
+module GhcPerf.Import.Utils where
 
 import Database.PostgreSQL.Simple
 import Database.PostgreSQL.Simple.SqlQQ
 import qualified Data.Map.Strict as M
 import Data.Int
 
-import Types
+import GhcPerf.Import.Types
 
 defaultConnInfo = defaultConnectInfo { connectDatabase = "ghc_perf", connectUser = "ben", connectPassword = "mudpie" }
 
@@ -64,3 +64,4 @@ addMetrics conn commit testEnv tests = withTransaction conn $ do
               VALUES (?,?,?,?)
               ON CONFLICT DO NOTHING |]
         results
+

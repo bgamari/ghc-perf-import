@@ -16,8 +16,8 @@ import Options.Applicative
 import System.FilePath
 import Control.Exception
 
-import Types
-import Utils
+import GhcPerf.Import.Types
+import GhcPerf.Import.Utils
 import Slurp
 import SummarizeResults
 

@@ -15,7 +15,7 @@ import qualified Data.ByteString.Lazy.Char8 as BSL
 sample :: Real a => [String] -> a -> Writer (DList (String, Double)) ()
 sample k v = tell $ singleton (intercalate "/" k, realToFrac v)
 
-parseResults :: FilePath  -> IO [(String, Double)]
+parseResults :: FilePath -> IO [(String, Double)]
 parseResults path = do
     input <- decompress <$> BSL.readFile path
     let nofibResults = toList $ execWriter
