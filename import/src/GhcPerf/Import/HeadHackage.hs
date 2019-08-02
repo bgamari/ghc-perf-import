@@ -63,7 +63,7 @@ parseLog pkg =
               | otherwise = error $ "failed to parse: "<>show grps
          in Measurements $ M.singleton (pkg, ModuleName mod, PassName pass) (Metrics alloc' time')
     
-toMetrics :: Measurements -> M.Map TestName Double
+toMetrics :: Measurements -> M.Map MetricName Double
 toMetrics (Measurements ms) = 
     M.fromList
     $ concat
@@ -71,6 +71,6 @@ toMetrics (Measurements ms) =
       , (name "time", time)
       ]
     | ((PackageName pkgName, ModuleName modName, PassName passName), Metrics alloc time) <- M.toList ms
-    , let name s = intercalate "/" [T.unpack pkgName, T.unpack modName, T.unpack passName, s]
+    , let name s = MetricName $ intercalate "/" [T.unpack pkgName, T.unpack modName, T.unpack passName, s]
     ]
 

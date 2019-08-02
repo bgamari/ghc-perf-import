@@ -22,7 +22,7 @@ ensureTestEnvExists conn testEnv = do
     return ()
 
 addMetrics :: Connection
-           -> Commit -> TestEnvName -> M.Map TestName Double -> IO Int64
+           -> Commit -> TestEnvName -> M.Map MetricName Double -> IO Int64
 addMetrics conn commit testEnv tests = withTransaction conn $ do
     executeMany conn
         [sql| INSERT INTO tests (test_name)

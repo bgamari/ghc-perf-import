@@ -14,13 +14,13 @@ import GhcPerf.Import.Utils
 import GhcPerf.Import.Types
 
 testEnv :: TestEnvName
-testEnv = "head-hackage"
+testEnv = TestEnvName "head-hackage"
 
 args :: Parser (String, Commit, [FilePath])
 args =
     (,,)
       <$> option str (short 'c' <> long "conn-string" <> help "PostgreSQL connection string")
-      <*> option str (short 'C' <> long "commit" <> help "which commit these logs were computed from")
+      <*> option (Commit <$> str) (short 'C' <> long "commit" <> help "which commit these logs were computed from")
       <*> some (argument str (help "log files"))
 
 

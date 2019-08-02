@@ -1,6 +1,15 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
 module GhcPerf.Import.Types where
 
--- TODO: Perhaps less hackery
-type Commit = String
-type TestEnvName = String
-type TestName = String
+import Database.PostgreSQL.Simple.FromField
+import Database.PostgreSQL.Simple.ToField
+
+newtype Commit = Commit { getCommit :: String }
+               deriving (Eq, Ord, Show, FromField, ToField)
+
+newtype TestEnvName = TestEnvName { getTestEnvName :: String }
+                    deriving (Eq, Ord, Show, FromField, ToField)
+
+newtype MetricName = MetricName { getMetricName :: String }
+                 deriving (Eq, Ord, Show, FromField, ToField)

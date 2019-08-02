@@ -31,3 +31,12 @@ main = do
     conn <- connectPostgreSQL $ BS.pack connString
     importNotes conn repoPath notesRef
 
+importNotes :: Connection -> FilePath -> NotesRef -> IO ()
+importNotes conn repo notesRef = do
+    commits <- listCommitsWithNotes repo notesRef
+    mapM_ ingestCommit commits
+  where
+    ingestCommit commit = do
+      notes <- readNotes repo notesRef commit 
+      let testEnvs = toMetrics notes
+      mapM_ (\(testEnvName, metrics) -> addMetrics conn commit testEnvName metrics) (M.toList testEnvs)

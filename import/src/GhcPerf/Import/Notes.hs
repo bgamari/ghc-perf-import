@@ -1,7 +1,8 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE PatternGuards #-}
+{-# LANGUAGE OverloadedStrings #-}
 
-module GhcPerf.Import.Notes (importNotes, NotesRef) where
+module GhcPerf.Import.Notes (listCommitsWithNotes, readNotes, NotesRef, toMetrics) where
 
 import Data.Semigroup ((<>))
 import Control.Exception
@@ -24,41 +25,37 @@ listCommitsWithNotes repo notesRef = do
     let args = ["-C", repo, "notes", "--ref", notesRef, "list"]
     mapMaybe (parse . words) . lines <$> readProcess "git" args ""
   where
-    parse [_noteCommit, commit] = Just commit
+    parse [_noteCommit, commit] = Just $ Commit commit
     parse _ = Nothing
 
 type NotesRef = String
-type Way = String
-type Metric = String
+type Way = T.Text
+type Metric = T.Text
+newtype TestName = TestName T.Text
+                 deriving (Eq, Ord, Show)
+
 
 parseNotes :: T.Text -> [(TestEnvName, TestName, Way, Metric, Double)]
 parseNotes = mapMaybe (f . T.words) . T.lines
   where
     f [testEnv, testName, way, metric, value]
       | ("", value') : _ <- read $ T.unpack value =
-        Just (T.unpack testEnv, T.unpack testName, T.unpack way, T.unpack metric, value')
+        Just (TestEnvName $ T.unpack testEnv, TestName testName, way, metric, value')
       | otherwise =
         Nothing
 
 readNotes :: FilePath -> NotesRef -> Commit -> IO [(TestEnvName, TestName, Way, Metric, Double)]
-readNotes repo notesRef commit = do
+readNotes repo notesRef (Commit commit) = do
     let cp = (proc "git" [ "-C", repo, "notes", "--ref", notesRef, "show", commit ]) { std_out = CreatePipe }
     (_, Just hdl, _, p) <- createProcess cp
     notes <- parseNotes <$> T.IO.hGetContents hdl
     ExitSuccess <- waitForProcess p
     return notes
 
-importNotes :: Connection -> FilePath -> NotesRef -> IO ()
-importNotes conn repo notesRef = do
-    commits <- listCommitsWithNotes repo notesRef
-    mapM_ ingestCommit commits
-  where
-    ingestCommit commit = do
-      notes <- readNotes repo notesRef commit 
-      let testEnvs = M.unionsWith (<>) 
-            [ M.singleton testEnv (M.singleton (metric <> "/" <> testName) value)
-            | (testEnv, testName, "normal", metric, value) <- notes
-            ]
-
-      mapM_ (\(testEnvName, metrics) -> addMetrics conn commit testEnvName metrics) (M.toList testEnvs)
+toMetrics :: [(TestEnvName, TestName, Way, Metric, Double)] -> M.Map TestEnvName (M.Map MetricName Double)
+toMetrics notes =
+    M.unionsWith (<>) 
+    [ M.singleton testEnv (M.singleton (MetricName $ T.unpack $ metric <> "/" <> testName) value)
+    | (testEnv, TestName testName, "normal", metric, value) <- notes
+    ]
 

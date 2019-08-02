@@ -84,10 +84,23 @@ executable perf-import-head-hackage
                        postgresql-simple,
                        containers,
                        text,
-                       lens,
-                       lens-regex-pcre,
-                       pcre-light,
+                       optparse-applicative >= 0.12,
+                       perf-import
+
+
+executable perf-import-gitlab-hook
+  main-is:             GitLabHook.hs
+  default-language:    Haskell2010
+  build-depends:       base,
+                       bytestring,
+                       filepath,
+                       postgresql-simple,
+                       containers,
+                       text,
                        template-haskell,
                        optparse-applicative >= 0.12,
                        process >= 1.4,
+                       servant,
+                       servant-server,
+                       aeson,
                        perf-import

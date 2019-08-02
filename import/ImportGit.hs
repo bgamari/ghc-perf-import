@@ -34,7 +34,7 @@ main = do
     mapM_ (importBranch conn repoPath) branches
 
 getCommitInfo :: FilePath -> Commit -> IO (UTCTime, String)
-getCommitInfo repo commit = do
+getCommitInfo repo (Commit commit) = do
     let args = ["-C", repo, "show", "--no-patch", "--pretty=%H\t%ct\n%s", commit]
     parse <$> readProcess "git" args ""
   where
@@ -51,7 +51,7 @@ importCommits conn repo = do
     commits <- query_ conn [sql| SELECT commit_id, commit_sha FROM commits WHERE commit_date IS NULL |]
             :: IO [(Int, Commit)]
     let printExc :: Commit -> SomeException -> IO ()
-        printExc commitSha exc = putStrLn $ commitSha++": "++show exc
+        printExc commitSha exc = putStrLn $ show commitSha++": "++show exc
     forM_ commits $ \(commitId, commitSha) -> handle (printExc commitSha) $ do
         (commitDate, commitTitle) <- getCommitInfo repo commitSha
         execute conn [sql| UPDATE commits
@@ -64,7 +64,7 @@ importCommits conn repo = do
 importBranch :: Connection -> FilePath -> String -> IO ()
 importBranch conn repo branchName = do
     let args = ["-C", repo, "rev-list", "--topo-order", branchName]
-    commits <- lines <$> readProcess "git" args ""
+    commits <- map Commit . lines <$> readProcess "git" args ""
 
     execute conn
         [sql| INSERT INTO branches (branch_name)
