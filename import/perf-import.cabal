@@ -12,8 +12,8 @@ build-type:          Simple
 extra-source-files:  ChangeLog.md
 cabal-version:       >=1.10
 
-executable perf-import
-  main-is:             Main.hs
+executable perf-import-nofib
+  main-is:             ImportNofib.hs
   other-modules:       SummarizeResults, Slurp, Types, TestsuiteResults, Utils
   other-extensions:    QuasiQuotes, RecordWildCards
   build-depends:       base >=4.8 && <4.14,
