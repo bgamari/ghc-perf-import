@@ -80,8 +80,8 @@ instance FromJSON TestEnvRow where
                <*> o .: "test_env_name"
 
 data Commit = Commit { commitSha   :: CommitSha
-                     , commitTitle :: JSString
-                     , commitDate  :: JSString
+                     , commitTitle :: Maybe JSString
+                     , commitDate  :: Maybe JSString
                      , commitResultsCount :: Int
                      }
             deriving (Eq, Show)
