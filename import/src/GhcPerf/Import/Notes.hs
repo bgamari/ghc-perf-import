@@ -38,11 +38,11 @@ newtype TestName = TestName T.Text
 parseNotes :: T.Text -> [(TestEnvName, TestName, Way, Metric, Double)]
 parseNotes = mapMaybe (f . T.words) . T.lines
   where
+    f :: [T.Text] -> Maybe (TestEnvName, TestName, Way, Metric, Double)
     f [testEnv, testName, way, metric, value]
-      | ("", value') : _ <- read $ T.unpack value =
+      | (value', "") : _ <- reads $ T.unpack value =
         Just (TestEnvName $ T.unpack testEnv, TestName testName, way, metric, value')
-      | otherwise =
-        Nothing
+    f _ = Nothing
 
 readNotes :: FilePath -> NotesRef -> Commit -> IO [(TestEnvName, TestName, Way, Metric, Double)]
 readNotes repo notesRef (Commit commit) = do
