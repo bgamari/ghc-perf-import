@@ -89,7 +89,8 @@ executable perf-import-head-hackage
 
 
 executable perf-import-gitlab-hook
-  main-is:             GitLabHook.hs
+  main-is:             HookMain.hs
+  other-modules:       GitLabHook
   default-language:    Haskell2010
   build-depends:       base,
                        bytestring,
@@ -103,4 +104,6 @@ executable perf-import-gitlab-hook
                        servant,
                        servant-server,
                        aeson,
+                       wai,
+                       warp,
                        perf-import

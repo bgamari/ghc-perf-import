@@ -2,7 +2,14 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TypeOperators #-}
 
-module GitLabHook where
+module GitLabHook
+  ( hookServer
+  , Hook
+    -- * Events
+  , Event(..)
+  , PushEvent(..)
+  , JobEvent(..)
+  ) where
 
 import Control.Monad.IO.Class
 import Data.Aeson

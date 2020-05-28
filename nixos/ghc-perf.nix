@@ -4,7 +4,7 @@ let
   db_name = "ghc_perf";
   postgrestPort = 8889;
 
-  ghc-perf-import = pkgs.haskellPackages.callCabal2nix "ghc-perf-import" ../import {};
+  ghc-perf-import = pkgs.haskellPackages.callCabal2nix "perf-import" ../import {};
 
   ghc-perf-web = pkgs.callPackage (import ../web.nix) {};
 
