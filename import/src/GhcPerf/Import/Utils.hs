@@ -48,6 +48,12 @@ addMetrics conn commit testEnv tests = withTransaction conn $ do
               WHERE commit_sha = ? |]
         (Only commit)
 
+    execute conn
+        [sql| INSERT INTO test_envs (test_env_name)
+              VALUES (?)
+              ON CONFLICT DO NOTHING |]
+        (Only testEnv)
+
     [Only testEnvId] <- query conn
         [sql| SELECT test_env_id
               FROM test_envs
