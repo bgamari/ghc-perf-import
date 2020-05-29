@@ -1,13 +1,13 @@
 {-# LANGUAGE QuasiQuotes #-}
 
-module Utils where
+module GhcPerf.Import.Utils where
 
 import Database.PostgreSQL.Simple
 import Database.PostgreSQL.Simple.SqlQQ
 import qualified Data.Map.Strict as M
 import Data.Int
 
-import Types
+import GhcPerf.Import.Types
 
 defaultConnInfo = defaultConnectInfo { connectDatabase = "ghc_perf", connectUser = "ben", connectPassword = "mudpie" }
 
@@ -22,7 +22,7 @@ ensureTestEnvExists conn testEnv = do
     return ()
 
 addMetrics :: Connection
-           -> Commit -> TestEnvName -> M.Map TestName Double -> IO Int64
+           -> Commit -> TestEnvName -> M.Map MetricName Double -> IO Int64
 addMetrics conn commit testEnv tests = withTransaction conn $ do
     executeMany conn
         [sql| INSERT INTO tests (test_name)

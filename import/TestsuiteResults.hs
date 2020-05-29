@@ -10,17 +10,18 @@ import Data.Attoparsec.ByteString.Char8
 import qualified Data.Attoparsec.ByteString.Lazy as A
 import qualified Data.ByteString.Lazy.Char8 as BSL
 import qualified Data.ByteString.Char8 as BS
+import GhcPerf.Import.Types
 
-parseResults :: BSL.ByteString -> [(String, Double)]
+parseResults :: BSL.ByteString -> [(MetricName, Double)]
 parseResults = mapMaybe parseResult . BSL.lines
 
-parseResult :: BSL.ByteString -> Maybe (String, Double)
+parseResult :: BSL.ByteString -> Maybe (MetricName, Double)
 parseResult s
   | A.Done _ r <- A.parse (fmap Just parseResult') s
   = r
   | otherwise = Nothing
 
-parseResult' :: Parser (String, Double)
+parseResult' :: Parser (MetricName, Double)
 parseResult' = do
     skipSpace
     void $ string "Expected"
@@ -42,4 +43,4 @@ parseResult' = do
                             , BS.unpack way
                             , map normalize $ BS.unpack metric
                             ]
-    return (metricName, value)
+    return (MetricName $ metricName, value)

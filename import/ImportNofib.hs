@@ -16,27 +16,27 @@ import Options.Applicative
 import System.FilePath
 import Control.Exception
 
-import Types
-import Utils
+import GhcPerf.Import.Types
+import GhcPerf.Import.Utils
 import Slurp
 import SummarizeResults
 
 args :: Parser (TestEnvName, String, S.Set FilePath)
 args =
     (,,)
-      <$> option str (short 'e' <> long "env" <> help "test environment name" <> metavar "ENV")
+      <$> option (TestEnvName <$> str) (short 'e' <> long "env" <> help "test environment name" <> metavar "ENV")
       <*> option str (short 'c' <> long "conn-string" <> help "PostgreSQL connection string")
       <*> fmap S.fromList (some $ argument str $ help "log files" <> metavar "FILE")
 
 getFileCommit :: FilePath -> Commit
 getFileCommit path
     -- abcd123.log/validate.xz
-  | takeFileName path == "validate.xz" = takeBaseName $ takeDirectory path
+  | takeFileName path == "validate.xz" = Commit $ takeBaseName $ takeDirectory path
     -- just plain abcd123.log
-  | otherwise = dropExtensions $ takeFileName path
+  | otherwise = Commit $ dropExtensions $ takeFileName path
 
 findMissingCommits :: Connection -> TestEnvName -> S.Set Commit -> IO (S.Set Commit)
-findMissingCommits conn testEnv commits =
+findMissingCommits conn (TestEnvName testEnv) commits =
     S.fromList . map (\(Only x) -> x) <$> query conn
         [sql| SELECT x.column1
               FROM ? as x
@@ -49,7 +49,7 @@ findMissingCommits conn testEnv commits =
                     AND commits.commit_sha = x.column1
               )
             |]
-        (Values ["text"] (map Only $ S.toList commits), testEnv)
+        (Values ["text"] (map (Only . getCommit) $ S.toList commits), testEnv)
 
 main :: IO ()
 main = do
@@ -68,7 +68,7 @@ main = do
     forM_ toImport $ \fname -> handle (printExc fname) $ do
         let commit = getFileCommit fname
         results <- M.fromList <$> parseResults fname
-        putStrLn $ commit++": "++show (M.size results)++" results"
+        putStrLn $ getCommit commit++": "++show (M.size results)++" results"
         void $ addMetrics conn commit testEnv results
 
     close conn
