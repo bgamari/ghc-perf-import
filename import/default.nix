@@ -8,7 +8,7 @@ let
       , containers, dlist, filepath, lens, lens-regex-pcre, lzma
       , optparse-applicative, pcre-light, postgresql-simple, process
       , regex-compat, servant, servant-server, stdenv, template-haskell
-      , text, time, transformers, wai, warp
+      , text, time, transformers, wai, warp, cassava
       }:
       mkDerivation {
         pname = "perf-import";
@@ -18,7 +18,7 @@ let
         isExecutable = true;
         libraryHaskellDepends = [
           base bytestring containers filepath lens lens-regex-pcre pcre-light
-          postgresql-simple process template-haskell text time
+          postgresql-simple process template-haskell text time cassava
         ];
         executableHaskellDepends = [
           aeson attoparsec base bytestring containers dlist filepath lzma

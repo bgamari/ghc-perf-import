@@ -18,6 +18,13 @@ from pathlib import Path
 import json
 import subprocess
 
+def determine_nofib_commit(compiler_info: str) -> str:
+    import ast
+    a = ast.literal_eval(compiler_info.strip().replace('\n',''))
+    assert isinstance(a, list)
+    b = dict(a)
+    return b['Project Git commit id']
+
 class GHCPerfWebhookServer(WebhookServer):
     def __init__(self, port: int, gl: gitlab.Gitlab, conn_string: str):
         WebhookServer.__init__(self, port)
@@ -46,13 +53,19 @@ class GHCPerfWebhookServer(WebhookServer):
     def _process_nofib_job(self, job: ProjectJob, tmp_dir: Path):
         logging.info(f'Processing nofib job {job.id}...')
         self._fetch_job_artifacts(job, tmp_dir)
-        results = list(tmp_dir.glob('*.results.tsv'))
+        print(list((tmp_dir / 'results').iterdir()))
+        results = list((tmp_dir / 'results').glob('*.results.tsv'))
         logging.info(f'Importing {len(results)} logs')
 
         # Run import tool
-        cmd = ['ghc-perf-import-nofib']
-        cmd += ['-c', self.conn_string]
-        subprocess.run(cmd, check=True)
+        commit = determine_nofib_commit((tmp_dir / 'results' / 'compiler-info').read_text())
+        for f in results:
+            cmd = ['perf-import-nofib']
+            cmd += ['-e', 'nofib']
+            cmd += ['-c', self.conn_string]
+            cmd += ['-C', commit]
+            cmd += [str(f)]
+            subprocess.run(cmd, check=True)
 
     def _process_head_hackage_job(self, job: ProjectJob, tmp_dir: Path):
         logging.info(f'Processing head.hackage job {job.id}...')
@@ -95,7 +108,7 @@ def main() -> None:
     parser.add_argument('--access-token', type=str, help='GitLab access token for bot user')
     parser.add_argument('--port', type=int, required=True, help='Listen port')
     parser.add_argument('--verbose', action='store_true', help='Enable verbose output')
-    parser.add_argument('--conn-string', type=str, help='PostgreSQL connection string')
+    parser.add_argument('--conn-string', type=str, required=True, help='PostgreSQL connection string')
     parser.add_argument('--test-nofib', type=int, help='nofib job to test')
     parser.add_argument('--test-head-hackage', type=int, help='head.hackage job to test')
     args = parser.parse_args()
