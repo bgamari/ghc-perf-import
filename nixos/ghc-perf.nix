@@ -65,6 +65,7 @@ in {
         --port=7088
     '';
     path = [ pkgs.git gitlab-bot ghc-perf-import ];
+    wantedBy = [ "multi-user.target" ];
     serviceConfig = {
       User = "ghc_perf";
       PermissionsStartOnly = true;
@@ -103,6 +104,7 @@ in {
     script = ''
       ${postgrest}/bin/postgrest ${postgrestConfig}
     '';
+    wantedBy = [ "multi-user.target" ];
     serviceConfig.User = "ghc_perf_web";
   };
 
