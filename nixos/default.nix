@@ -1,3 +1,4 @@
+args:
 { lib, ... }:
 
 let
@@ -7,4 +8,4 @@ let
     ref = "release-20.03";
   }) {};
 in
-  import ./ghc-perf.nix { inherit pkgs lib; }
+  import ./ghc-perf.nix args { inherit pkgs lib; }
