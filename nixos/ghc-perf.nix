@@ -1,9 +1,9 @@
+{ accessToken }:
 { pkgs, lib, ... }:
 
 let
   db_name = "ghc_perf";
   postgrestPort = 8889;
-  accessToken = "TOKEN";
 
   ghc-perf-import = pkgs.haskellPackages.callCabal2nix "perf-import" ../import {};
 
