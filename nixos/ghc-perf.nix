@@ -77,12 +77,6 @@ in {
     shell = "/bin/false";
   };
 
-  services.nginx.virtualHosts."home.smart-cactus.org" = {
-    locations."/ghc-perf/" = {
-      alias = "${ghc-perf-web}";
-    };
-  };
-
   systemd.services.postgrest-ghc-perf = {
     description = "Postgrest instance for ghc-perf";
     script = ''
