@@ -3,10 +3,13 @@
 let
   db_name = "ghc_perf";
   postgrestPort = 8889;
+  accessToken = "TOKEN";
 
   ghc-perf-import = pkgs.haskellPackages.callCabal2nix "perf-import" ../import {};
 
   ghc-perf-web = pkgs.callPackage (import ../web.nix) {};
+
+  gitlab-bot = pkgs.callPackage ../gitlab-bot {};
 
   postgrest = import ./postgrest { inherit pkgs; };
   postgrestConfig = builtins.toFile "postgrest.conf" ''
@@ -51,8 +54,26 @@ in {
     description = "User for ghc-perf import script";
   };
 
-  systemd.services.ghc-perf-import = {
-    description = "Update ghc-perf metrics";
+  systemd.services.ghc-perf-gitlab-import-bot = {
+    description = "ghc-perf metric import bot";
+    preStart = pre-import-script;
+    script = ''
+      ghc-perf-import-service \
+        --gitlab-root=https://gitlab.haskell.org/ \
+        --access-token=${accessToken} \
+        --conn-string=postgresql:///ghc_perf \
+        --port=7088
+    '';
+    path = [ pkgs.git gitlab-bot ghc-perf-import ];
+    serviceConfig = {
+      User = "ghc_perf";
+      PermissionsStartOnly = true;
+      CacheDirectory = "ghc-perf";
+    };
+  };
+
+  systemd.services.ghc-note-perf-import = {
+    description = "Update ghc-perf metrics from perf notes";
     preStart = pre-import-script;
     script = import-script;
     path = [ pkgs.git ghc-perf-import ];
