@@ -67,7 +67,7 @@ in {
     description = "Periodically update ghc-perf metrics";
     wants = [ "network.target" ];
     timerConfig = {
-      OnCalendar = "daily";
+      OnCalendar = "hourly";
       Unit = "ghc-perf-import.service";
     };
   };
