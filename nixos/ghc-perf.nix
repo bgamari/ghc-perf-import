@@ -34,18 +34,16 @@ let
 
   import-script = ''
     cd /var/cache/ghc-perf
-
-    if [ ! -d ghc-speed-logs ]; then
-      git clone git://github.com/nomeata/ghc-speed-logs
-    fi
     if [ ! -d ghc ]; then
-      git clone git://github.com/ghc/ghc
+      git clone https://gitlab.haskell.org/ghc/ghc
     fi
-    git -C ghc-speed-logs pull
-    git -C ghc pull
+    cd ghc
 
-    perf-import -c postgresql:///${db_name} -e nomeata ghc-speed-logs/*.log
+    git pull
+    git fetch https://gitlab.haskell.org/ghc/ghc-performance-notes.git refs/notes/perf:refs/notes/ci/perf
+
     perf-import-git -c postgresql:///${db_name} -d ghc
+    perf-import-notes -c postgresql:///${db_name} -d ghc -r refs/notes/ci/perf
   '';
 
 in {
