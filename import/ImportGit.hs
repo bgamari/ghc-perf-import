@@ -51,7 +51,7 @@ importCommits conn repo = do
     commits <- query_ conn [sql| SELECT commit_id, commit_sha FROM commits WHERE commit_date IS NULL |]
             :: IO [(Int, Commit)]
     let printExc :: Commit -> SomeException -> IO ()
-        printExc commitSha exc = putStrLn $ show commitSha++": "++show exc
+        printExc commitSha exc = putStrLn $ "Error importing commit: "++show commitSha++": "++show exc
     forM_ commits $ \(commitId, commitSha) -> handle (printExc commitSha) $ do
         (commitDate, commitTitle) <- getCommitInfo repo commitSha
         execute conn [sql| UPDATE commits
