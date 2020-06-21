@@ -34,7 +34,9 @@ let
 
   variant = if doBenchmark then pkgs.haskell.lib.doBenchmark else pkgs.lib.id;
 
-  drv = variant (haskellPackages.callPackage f {});
+  lens-regex-pcre = haskellPackages.callHackage "lens-regex-pcre" "0.3.1.0" {};
+
+  drv = variant (haskellPackages.callPackage f { inherit lens-regex-pcre; });
 
 in
 

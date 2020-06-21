@@ -38,15 +38,20 @@ let
   import-script = ''
     cd /var/cache/ghc-perf
     if [ ! -d ghc ]; then
+      echo "cloning $(pwd)/ghc..."
       git clone https://gitlab.haskell.org/ghc/ghc
     fi
     cd ghc
 
+    echo "updating $(pwd)/ghc..."
     git pull
     git fetch https://gitlab.haskell.org/ghc/ghc-performance-notes.git refs/notes/perf:refs/notes/ci/perf
 
-    perf-import-git -c postgresql:///${db_name} -d ghc
-    perf-import-notes -c postgresql:///${db_name} -d ghc -r refs/notes/ci/perf
+    echo "importing commits..."
+    perf-import-git -c postgresql:///${db_name} -d ghc master
+
+    echo "importing notes..."
+    perf-import-notes -c postgresql:///${db_name} -d ghc -R refs/notes/ci/perf
   '';
 
 in {
@@ -85,12 +90,13 @@ in {
     };
   };
 
-  systemd.timers.ghc-perf-import = {
+  systemd.timers.ghc-note-perf-import = {
     description = "Periodically update ghc-perf metrics";
     wants = [ "network.target" ];
+    wantedBy = [ "multi-user.target" ];
     timerConfig = {
       OnCalendar = "hourly";
-      Unit = "ghc-perf-import.service";
+      Unit = "ghc-note-perf-import.service";
     };
   };
 
