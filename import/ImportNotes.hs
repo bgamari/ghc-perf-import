@@ -43,6 +43,4 @@ ingestCommit :: Connection -> FilePath -> NotesRef -> Commit -> IO ()
 ingestCommit conn repo notesRef commit = do
     notes <- readNotes repo notesRef commit
     let testEnvs = toMetrics notes
-    putStrLn $ unlines $ map show notes
-    putStrLn $ unlines $ map show $ M.toList testEnvs
     mapM_ (\(testEnvName, metrics) -> addMetrics conn commit testEnvName metrics) (M.toList testEnvs)
