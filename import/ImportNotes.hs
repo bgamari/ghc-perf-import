@@ -18,25 +18,31 @@ import GhcPerf.Import.Types
 import GhcPerf.Import.Utils
 import GhcPerf.Import.Notes
 
-args :: Parser (FilePath, String, NotesRef)
+args :: Parser (FilePath, String, NotesRef, Maybe [Commit])
 args =
-    (,,)
+    (,,,)
       <$> option str (short 'd' <> long "directory" <> help "GHC repository path")
       <*> option str (short 'c' <> long "conn-string" <> help "PostgreSQL connection string")
       <*> option str (short 'R' <> long "notes-ref" <> help "Git ref where performance notes can be found")
+      <*> (fmap Just commits <|> pure Nothing)
+  where
+    commits =
+      some $ option (Commit <$> str) (short 'C' <> long "commit" <> help "Commits to import (all if omitted")
 
 main :: IO ()
 main = do
-    (repoPath, connString, notesRef) <- execParser $ info (helper <*> args) mempty
+    (repoPath, connString, notesRef, commits) <- execParser $ info (helper <*> args) mempty
     conn <- connectPostgreSQL $ BS.pack connString
-    importNotes conn repoPath notesRef
+    commits' <- case commits of
+      Nothing -> listCommitsWithNotes repoPath notesRef
+      Just commits' -> pure commits'
 
-importNotes :: Connection -> FilePath -> NotesRef -> IO ()
-importNotes conn repo notesRef = do
-    commits <- listCommitsWithNotes repo notesRef
-    mapM_ ingestCommit commits
-  where
-    ingestCommit commit = do
-      notes <- readNotes repo notesRef commit 
-      let testEnvs = toMetrics notes
-      mapM_ (\(testEnvName, metrics) -> addMetrics conn commit testEnvName metrics) (M.toList testEnvs)
+    mapM_ (ingestCommit conn repoPath notesRef) commits'
+
+ingestCommit :: Connection -> FilePath -> NotesRef -> Commit -> IO ()
+ingestCommit conn repo notesRef commit = do
+    notes <- readNotes repo notesRef commit
+    let testEnvs = toMetrics notes
+    putStrLn $ unlines $ map show notes
+    putStrLn $ unlines $ map show $ M.toList testEnvs
+    mapM_ (\(testEnvName, metrics) -> addMetrics conn commit testEnvName metrics) (M.toList testEnvs)
