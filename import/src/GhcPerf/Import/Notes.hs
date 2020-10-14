@@ -36,7 +36,7 @@ newtype TestName = TestName T.Text
 
 
 parseNotes :: T.Text -> [(TestEnvName, TestName, Way, Metric, Double)]
-parseNotes = mapMaybe (f . T.words) . T.lines
+parseNotes = mapMaybe (f . T.splitOn "\t") . T.lines
   where
     f :: [T.Text] -> Maybe (TestEnvName, TestName, Way, Metric, Double)
     f [testEnv, testName, way, metric, value]
