@@ -55,7 +55,7 @@ readNotes repo notesRef (Commit commit) = do
 toMetrics :: [(TestEnvName, TestName, Way, Metric, Double)] -> M.Map TestEnvName (M.Map MetricName Double)
 toMetrics notes =
     M.unionsWith (<>) 
-    [ M.singleton testEnv (M.singleton (MetricName $ T.unpack $ metric <> "/" <> testName) value)
-    | (testEnv, TestName testName, "normal", metric, value) <- notes
+    [ M.singleton testEnv (M.singleton (MetricName $ T.unpack $ metric <> "/" <> testName <> "/" <> way) value)
+    | (testEnv, TestName testName, way, metric, value) <- notes
     ]
 
