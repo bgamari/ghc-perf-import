@@ -35,7 +35,7 @@ library
 executable perf-import-nofib
   main-is:             ImportNofib.hs
   other-extensions:    QuasiQuotes, RecordWildCards
-  build-depends:       base >=4.8 && <4.14,
+  build-depends:       base >=4.8 && <4.16,
                        postgresql-simple >=0.5 && <0.7,
                        containers >=0.5 && <0.7,
                        dlist >=0.7 && <0.9,

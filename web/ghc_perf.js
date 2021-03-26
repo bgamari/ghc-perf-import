@@ -6,7 +6,7 @@ Plotly.setPlotConfig({ logging: 2 });
 
 const limit = 100000;
 
-const root_url = "http://home.smart-cactus.org:8889";
+const root_url = "https://perf.ghc.haskell.org/db";
 
 let graph_div;
 

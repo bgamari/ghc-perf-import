@@ -35,8 +35,9 @@ class GHCPerfWebhookServer(WebhookServer):
         if event['build_status'] != 'success':
             return
 
+        logging.info('event: %s' % event)
         proj_id = event['project_id']
-        job_id = event['job_id']
+        job_id = event['build_id']
         project = self.gl.projects.get(proj_id)
 
         if project.name == "nofib/nofib":
@@ -113,8 +114,7 @@ def main() -> None:
     parser.add_argument('--test-head-hackage', type=int, help='head.hackage job to test')
     args = parser.parse_args()
 
-    if args.verbose:
-        logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO)
 
     gl = gitlab.Gitlab(args.gitlab_root, args.access_token)
 
