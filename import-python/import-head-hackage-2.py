@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+"""
+Import head.hackage -ddump-timings results into head_hackage_results table.
+"""
+
 import re
 import gitlab
 import traceback

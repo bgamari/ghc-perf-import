@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Import performance metrics from a head.hackage run into the `results`
+table.
+"""
+
 import gitlab
 import shutil
 import ast
