@@ -23,12 +23,18 @@ CREATE TABLE tests
 
 CREATE INDEX ON tests (test_name);
 
+CREATE TABLE result_srcs
+    ( result_src_id serial PRIMARY KEY
+    , description text UNIQUE NOT NULL
+    , result_date timestamptz
+    );
+
 CREATE TABLE results
     ( result_id serial PRIMARY KEY
     , commit_id integer REFERENCES commits (commit_id)
     , test_env_id integer REFERENCES test_envs (test_env_id)
     , test_id integer REFERENCES tests (test_id)
-    , result_date timestamptz
+    , result_src_id integer REFERENCES result_srcs(result_src_id)
     , result_value float NOT NULL
     );
 
@@ -67,14 +73,15 @@ CREATE VIEW results_view AS
            , test_envs.test_env_name AS test_env
            , tests.test_name AS test_name
            , results.test_env_id AS test_env_id
+           , results.result_id AS result_id
            , results.test_id AS test_id
            , results.result_value as result_value
     FROM results
-    JOIN tests USING (test_id)
-    JOIN test_envs USING (test_env_id)
-    JOIN commits USING (commit_id)
-    JOIN branch_commits USING (commit_id)
-    JOIN branches USING (branch_id);
+    INNER JOIN tests USING (test_id)
+    INNER JOIN test_envs USING (test_env_id)
+    INNER JOIN commits USING (commit_id)
+    INNER JOIN branch_commits USING (commit_id)
+    INNER JOIN branches USING (branch_id);
 
 CREATE USER ghc_perf_web WITH PASSWORD 'ghc';
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO ghc_perf_web;

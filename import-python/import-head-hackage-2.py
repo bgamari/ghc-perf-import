@@ -40,7 +40,6 @@ create view head_hackage_results_view as
 """
 
 conn_str = 'postgresql:///ghc_perf'
-import_tool = '/home/ben/ghc-perf-import/import/result/bin/perf-import-head-hackage'
 
 def parse_info(fname: Path) -> dict:
     return {k: v for (k,v) in ast.literal_eval(fname.read_text().strip())}

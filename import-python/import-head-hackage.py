@@ -14,11 +14,10 @@ from pathlib import Path
 import json
 import subprocess
 
+from ghc_perf_db import *
+
 conn_str = 'postgresql:///ghc_perf'
 import_tool = '/home/ben/ghc-perf-import/import/result/bin/perf-import-head-hackage'
-
-def parse_info(fname: Path) -> dict:
-    return {k: v for (k,v) in ast.literal_eval(fname.read_text().strip())}
 
 gl = gitlab.Gitlab.from_config()
 proj = gl.projects.get('ghc/head.hackage')
@@ -32,7 +31,7 @@ for job in proj.jobs.list(all=False):
         outdir = TemporaryDirectory()
         shutil.unpack_archive(f'{tmpdir.name}/results.tar.xz', extract_dir=outdir.name)
         out = Path(outdir.name)
-        info = parse_info(out / 'compiler-info')
+        info = parse_compiler_info(out / 'compiler-info')
         commit = info['Project Git commit id']
         logs = list((out / 'logs').glob('*'))
         subprocess.check_call([import_tool, '-c', conn_str, '-C', commit] + [str(path) for path in logs])
