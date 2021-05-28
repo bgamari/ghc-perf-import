@@ -1,9 +1,6 @@
 CREATE DATABASE ghc_perf;
 \c ghc_perf
 
--- This improves query performance on results_view significantly
-ALTER DATABASE ghc_perf SET cpu_tuple_cost = 0.2;
-
 CREATE TABLE test_envs
     ( test_env_id serial PRIMARY KEY
     , test_env_name text UNIQUE NOT NULL
@@ -21,17 +18,24 @@ CREATE INDEX ON commits (commit_sha);
 
 CREATE TABLE tests
     ( test_id serial PRIMARY KEY
-    , test_name text UNIQUE
+    , test_name text UNIQUE NOT NULL
     );
 
 CREATE INDEX ON tests (test_name);
 
+CREATE TABLE result_srcs
+    ( result_src_id serial PRIMARY KEY
+    , description text UNIQUE NOT NULL
+    , result_date timestamptz
+    );
+
 CREATE TABLE results
-    ( commit_id integer REFERENCES commits (commit_id)
+    ( result_id serial PRIMARY KEY
+    , commit_id integer REFERENCES commits (commit_id)
     , test_env_id integer REFERENCES test_envs (test_env_id)
     , test_id integer REFERENCES tests (test_id)
+    , result_src_id integer REFERENCES result_srcs(result_src_id)
     , result_value float NOT NULL
-    , PRIMARY KEY (commit_id, test_env_id, test_id)
     );
 
 CREATE INDEX ON results (test_env_id, commit_id);
@@ -54,6 +58,10 @@ CREATE TABLE branch_commits
 CREATE INDEX ON branch_commits (branch_id);
 
 
+-------------------------------------
+-- Convenient Views
+-------------------------------------
+
 CREATE VIEW results_view AS
     SELECT   commits.commit_sha AS commit_sha
            , commits.commit_date AS commit_date
@@ -65,14 +73,15 @@ CREATE VIEW results_view AS
            , test_envs.test_env_name AS test_env
            , tests.test_name AS test_name
            , results.test_env_id AS test_env_id
+           , results.result_id AS result_id
            , results.test_id AS test_id
            , results.result_value as result_value
     FROM results
-    JOIN tests USING (test_id)
-    JOIN test_envs USING (test_env_id)
-    JOIN commits USING (commit_id)
-    JOIN branch_commits USING (commit_id)
-    JOIN branches USING (branch_id);
+    INNER JOIN tests USING (test_id)
+    INNER JOIN test_envs USING (test_env_id)
+    INNER JOIN commits USING (commit_id)
+    INNER JOIN branch_commits USING (commit_id)
+    INNER JOIN branches USING (branch_id);
 
 CREATE USER ghc_perf_web WITH PASSWORD 'ghc';
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO ghc_perf_web;
@@ -119,6 +128,7 @@ CREATE VIEW branches_view AS
 CREATE VIEW deltas2 AS
     SELECT   cx.commit_sha as commit_1
            , cy.commit_sha as commit_2
+           , test_envs.test_env_name
            , tests.test_name
            , rx.result_value AS result_value_1
            , ry.result_value AS result_value_2
@@ -136,6 +146,32 @@ CREATE VIEW deltas2 AS
       AND rx.test_id = ry.test_id
       AND tests.test_id = rx.test_id
       AND test_envs.test_env_id = rx.test_env_id;
+
+CREATE VIEW test_deltas AS
+    WITH x AS (
+        SELECT   r_ref.test_env_id as test_env_id
+               , r_ref.commit_id as ref_commit_id
+               , ry.commit_id as commit_id
+               , geom_mean((avg(ry.result_value :: real) / avg(r_ref.result_value :: real)) :: real)
+                 OVER (PARTITION BY r_ref.test_env_id, r_ref.commit_id, ry.commit_id) AS geom_mean
+        FROM   results AS r_ref
+        INNER JOIN results ry
+           ON ry.test_id = r_ref.test_id 
+          AND ry.test_env_id = r_ref.test_env_id 
+        GROUP BY r_ref.test_env_id, r_ref.commit_id, ry.commit_id
+    )
+
+    SELECT   test_envs.test_env_id
+           , test_envs.test_env_name
+	   , ref_commit.commit_sha AS ref_commit_sha
+	   , x_commit.commit_sha AS commit_sha
+	   , x.geom_mean AS geom_mean
+    FROM x
+    INNER JOIN test_envs ON test_envs.test_env_id = x.test_env_id
+    INNER JOIN commits ref_commit ON ref_commit.commit_id = x.ref_commit_id
+    INNER JOIN commits x_commit ON x_commit.commit_id = x.commit_id
+    ORDER BY x.test_env_id,
+             ref_commit.commit_date;
 
 CREATE VIEW commit_metric_counts AS
     SELECT   results.test_env_id
@@ -157,7 +193,10 @@ CREATE VIEW commit_metric_counts AS
              , commits.commit_date
              , commits.commit_title;
 
--- Geometric mean
+-------------------------------------
+-- Geometric mean aggregation
+-------------------------------------
+
 CREATE TYPE geom_mean_accum AS (prod real, n integer);
 CREATE FUNCTION geom_mean_acc(s geom_mean_accum, v real)
 RETURNS geom_mean_accum
@@ -178,3 +217,4 @@ CREATE AGGREGATE geom_mean(real)
     initcond = '(1,0)',
     finalfunc = geom_mean_final
 );
+

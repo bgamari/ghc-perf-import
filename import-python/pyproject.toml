@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "import-python"
+version = "0.1.0"
+description = ""
+authors = ["Ben Gamari <ben@well-typed.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+requests = "^2.25"
+asyncpg = "^0.22"
+python-gitlab = "^2.6"
+python-dateutil = "^2.8"
+
+[tool.poetry.dev-dependencies]
+
+[tool.poetry.scripts]
+import-head-hackage = 'import_head_hackage:main'
+import-simple-perf = 'import_simple_perf:run'
+import-nofib       = 'import_nofib:run'
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
